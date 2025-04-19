@@ -1,449 +1,516 @@
-import React, { useEffect, useState } from 'react';
-import { tourismData, states, cities } from './TempData';
+import React, { useState, useEffect } from 'react';
+import { Search, Clock, Map, Star, Heart, Share, Filter, ChevronDown, User, Camera, BookOpen, PlusCircle } from 'lucide-react';
 
-const MapPinIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const StarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-  </svg>
-);
-
-const MountainIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-  </svg>
-);
-
-const HotelIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block mr-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-  </svg>
-);
-
-const MapIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.618V7.382a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-  </svg>
-);
-const WeatherIcons = {
-  Sunny: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m3.343-5.657L5.929 5.93m12.728 12.728L18.07 18.07M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-  ),
-  Cloudy: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-    </svg>
-  ),
-  Rainy: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-    </svg>
-  )
-};
-const TourismWebsite = () => {
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [weather, setWeather] = useState(null);
-  const [travelTipsOpen, setTravelTipsOpen] = useState(false);
-  const [budgetCalculator, setBudgetCalculator] = useState({
-    travelers: 1,
-    days: 1,
-    estimatedCost: 0
-  });
-  const [userReviews, setUserReviews] = useState({
-    destinations: [],
-    hotels: []
-  });
+const ItinerariesPage = () => {
+  const [activeTab, setActiveTab] = useState('discover');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [itineraries, setItineraries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    if (selectedCity) {
-      const weatherConditions = ['Sunny', 'Cloudy', 'Rainy'];
-      setWeather({
-        temperature: Math.floor(Math.random() * 30) + 20,
-        condition: weatherConditions[Math.floor(Math.random() * weatherConditions.length)]
-      });
-    }
-  }, [selectedCity]);
+    // Simulate fetching data
+    setTimeout(() => {
+      setItineraries(sampleItineraries);
+      setLoading(false);
+    }, 1000);
+  }, []);
 
-  const calculateBudget = () => {
-    if (!selectedState || !selectedCity) return;
-
-    const cityData = tourismData[selectedState].cities[selectedCity];
-    const averageHotelPrice = cityData.hotels.reduce((sum, hotel) => sum + hotel.pricePerNight, 0) / cityData.hotels.length;
-    const averageDestinationCost = cityData.destinations.reduce((sum, dest) => sum + (dest.entranceFee || 0), 0) / cityData.destinations.length;
-
-    const totalCost = (
-      (averageHotelPrice * budgetCalculator.days) + 
-      (averageDestinationCost * budgetCalculator.days) +
-      (500 * budgetCalculator.travelers) 
-    );
-
-    setBudgetCalculator(prev => ({
-      ...prev,
-      estimatedCost: Math.round(totalCost)
-    }));
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
   };
 
-  useEffect(() => {
-    if (selectedCity) {
-      const cityData = tourismData[selectedState].cities[selectedCity];
+  const filteredItineraries = itineraries.filter(itinerary => {
+    const matchesSearch = itinerary.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          itinerary.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || itinerary.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50">
       
-      const generateReviews = (items) => {
-        return items.map(item => ({
-          name: item.name,
-          reviews: [
-            {
-              author: 'Anonymous Traveler',
-              rating: Math.floor(Math.random() * 5) + 1,
-              comment: `Great experience at ${item.name}. Highly recommended!`
-            }
-          ]
-        }));
-      };
 
-      setUserReviews({
-        destinations: generateReviews(cityData.destinations),
-        hotels: generateReviews(cityData.hotels)
-      });
-    }
-  }, [selectedCity, selectedState]);
-
-
-  const renderCard = (item, type) => {
-    return (
-      <div 
-        key={item.name} 
-        className="bg-white shadow-lg rounded-lg overflow-hidden transform transition hover:scale-105 hover:shadow-xl"
-      >
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-bold text-gray-800">{item.name}</h3>
-            <div className="flex items-center text-yellow-500">
-              <StarIcon />
-              <span className="ml-1 text-gray-700">{item.rating}</span>
-            </div>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Page Title */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Itineraries</h1>
+            <p className="text-gray-600 mt-1">Discover curated experiences from top critics and travelers</p>
           </div>
+          <button className="mt-4 md:mt-0 flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+            <PlusCircle size={18} />
+            <span>Create Itinerary</span>
+          </button>
+        </div>
 
-          {type === 'destination' && (
-            <p className="text-gray-600 mb-2">{item.description}</p>
-          )}
-
-          {type === 'hotel' && (
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-gray-600">Amenities:</p>
-                <div className="flex space-x-2 mt-1">
-                  {item.amenities.map((amenity, idx) => (
-                    <span 
-                      key={idx} 
-                      className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
-                    >
-                      {amenity}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-600">Price</p>
-                <p className="font-bold text-green-600">${item.pricePerNight}/night</p>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-3 flex justify-between items-center">
-            <a 
-              href={item.mapsLink} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-600 hover:text-blue-800 flex items-center"
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('discover')}
+              className={`pb-4 px-1 ${activeTab === 'discover' ? 'border-b-2 border-indigo-600 text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              <MapIcon />
-              View on Google Maps
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderContent = () => {
-    if (!selectedState || !selectedCity) {
-      return (
-        <div className="text-center py-12">
-          <h2 className="text-3xl font-bold text-gray-700 mb-4">
-            Explore India's Beautiful Destinations
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Select a state and city to discover amazing destinations, historic landmarks, 
-            and top-rated hotels across India.
-          </p>
-        </div>
-      );
-    }
-
-    const stateData = tourismData[selectedState];
-    const cityData = stateData.cities[selectedCity];
-
-    return (
-      <div>
-        <div 
-          className="h-64 bg-cover bg-center rounded-lg mb-6 relative"
-          style={{backgroundImage: `url(${stateData.coverImage})`}}
-        >
-          <div className="absolute inset-0 bg-black opacity-40 rounded-lg"></div>
-          <div className="absolute bottom-0 left-0 p-6 text-white">
-            <h2 className="text-3xl font-bold">{selectedState}</h2>
-            <p className="text-xl">{selectedCity}</p>
+              Discover
+            </button>
+            <button
+              onClick={() => setActiveTab('following')}
+              className={`pb-4 px-1 ${activeTab === 'following' ? 'border-b-2 border-indigo-600 text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              Following
+            </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`pb-4 px-1 ${activeTab === 'saved' ? 'border-b-2 border-indigo-600 text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              Saved
+            </button>
+            <button
+              onClick={() => setActiveTab('my')}
+              className={`pb-4 px-1 ${activeTab === 'my' ? 'border-b-2 border-indigo-600 text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              My Itineraries
+            </button>
           </div>
         </div>
 
-        <section className="mb-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-            <MountainIcon /> 
-            Top Destinations
-          </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cityData.destinations.map(dest => renderCard(dest, 'destination'))}
-          </div>
-        </section>
-
-        <section>
-          <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-            <HotelIcon /> 
-            Featured Hotels
-          </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cityData.hotels.map(hotel => renderCard(hotel, 'hotel'))}
-          </div>
-        </section>
-      </div>
-    );
-  };
-
-  const renderTravelTips = () => {
-    if (!selectedState) return null;
-
-    const travelTips = {
-      'Maharashtra': {
-        bestTimeToVisit: 'October to March',
-        localCustoms: 'Respect local Marathi traditions and greet with "Namaste"',
-        transportation: 'Local trains in Mumbai, state buses for intercity travel'
-      },
-      'default': {
-        bestTimeToVisit: 'Varies by region',
-        localCustoms: 'Respect local traditions and dress modestly',
-        transportation: 'Check local transportation options'
-      }
-    };
-    const tips = travelTips[selectedState] || travelTips['default'];
-
-    return (
-      <div className="bg-white shadow-md rounded-lg p-4 mt-4">
-        <div 
-          className="flex justify-between items-center cursor-pointer"
-          onClick={() => setTravelTipsOpen(!travelTipsOpen)}
-        >
-          <h4 className="text-xl font-bold text-gray-800">Travel Tips</h4>
-          <span>{travelTipsOpen ? '▲' : '▼'}</span>
-        </div>
-        {travelTipsOpen && (
-          <div className="mt-4">
-            <div className="mb-2">
-              <strong>Best Time to Visit:</strong> {tips.bestTimeToVisit}
-            </div>
-            <div className="mb-2">
-              <strong>Local Customs:</strong> {tips.localCustoms}
-            </div>
-            <div>
-              <strong>Transportation:</strong> {tips.transportation}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderWeatherWidget = () => {
-    if (!weather) return null;
-
-    const WeatherIcon = WeatherIcons[weather.condition];
-
-    return (
-      <div className="bg-white shadow-md rounded-lg p-4 flex items-center">
-        <div className="mr-4">
-          <WeatherIcon />
-        </div>
-        <div>
-          <h4 className="text-xl font-bold text-gray-800">Current Weather</h4>
-          <p className="text-gray-600">{weather.temperature}°C, {weather.condition}</p>
-        </div>
-      </div>
-    );
-  };
-
-  const renderBudgetCalculator = () => {
-    if (!selectedState || !selectedCity) return null;
-
-    return (
-      <div className="bg-white shadow-md rounded-lg p-4 mt-4">
-        <h4 className="text-xl font-bold text-gray-800 mb-4">Trip Budget Estimator</h4>
-        <div className="flex space-x-4 mb-4">
-          <div className="flex-1">
-            <label className="block text-gray-700 mb-2">Number of Travelers</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={budgetCalculator.travelers}
-              onChange={(e) => setBudgetCalculator(prev => ({
-                ...prev, 
-                travelers: parseInt(e.target.value)
-              }))}
-              className="w-full p-2 border rounded"
+        {/* Search and Filters */}
+        <div className="mb-8 flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:items-center">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              placeholder="Search itineraries, locations, critics..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
+            <Search size={20} className="absolute left-3 top-3.5 text-gray-500" />
           </div>
-          <div className="flex-1">
-            <label className="block text-gray-700 mb-2">Days of Stay</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={budgetCalculator.days}
-              onChange={(e) => setBudgetCalculator(prev => ({
-                ...prev, 
-                days: parseInt(e.target.value)
-              }))}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-        </div>
-        <button 
-          onClick={calculateBudget}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-        >
-          Calculate Estimated Cost
-        </button>
-        {budgetCalculator.estimatedCost > 0 && (
-          <div className="mt-4 text-center">
-            <p className="text-xl font-bold text-green-600">
-              Estimated Total Cost: ₹{budgetCalculator.estimatedCost}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderUserReviews = () => {
-    if (!selectedCity) return null;
-
-    const renderReviewSection = (title, reviews) => (
-      <div className="mt-4">
-        <h4 className="text-xl font-bold text-gray-800 mb-2">{title}</h4>
-        {reviews.map((item, index) => (
-          <div key={index} className="bg-gray-100 p-3 rounded-lg mb-2">
-            <h5 className="font-semibold">{item.name}</h5>
-            {item.reviews.map((review, reviewIdx) => (
-              <div key={reviewIdx} className="mt-2">
-                <div className="flex items-center">
-                  {[...Array(review.rating)].map((_, i) => (
-                    <StarIcon key={i} />
-                  ))}
+          
+          <div className="relative">
+            <button 
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-3 hover:bg-gray-50"
+            >
+              <Filter size={18} className="text-gray-700" />
+              <span>Filters</span>
+              <ChevronDown size={16} className="text-gray-600" />
+            </button>
+            
+            {filterOpen && (
+              <div className="absolute mt-2 right-0 w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-10">
+                <div className="mb-4">
+                  <p className="font-medium text-gray-700 mb-2">Duration</p>
+                  <div className="flex space-x-2">
+                    <button className="px-3 py-1 border border-gray-300 rounded-full text-sm hover:bg-gray-100">6 h</button>
+                    <button className="px-3 py-1 border border-gray-300 rounded-full text-sm hover:bg-gray-100">1 Day</button>
+                    <button className="px-3 py-1 border border-gray-300 rounded-full text-sm hover:bg-gray-100">2-3 Days</button>
+                  </div>
                 </div>
-                <p className="text-gray-600 mt-1">{review.comment}</p>
+                <div className="mb-4">
+                  <p className="font-medium text-gray-700 mb-2">Categories</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      onClick={() => setSelectedCategory('all')}
+                      className={`px-3 py-1 border rounded-full text-sm ${selectedCategory === 'all' ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 hover:bg-gray-100'}`}
+                    >
+                      All
+                    </button>
+                    <button 
+                      onClick={() => setSelectedCategory('food')}
+                      className={`px-3 py-1 border rounded-full text-sm ${selectedCategory === 'food' ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 hover:bg-gray-100'}`}
+                    >
+                      Food
+                    </button>
+                    <button 
+                      onClick={() => setSelectedCategory('culture')}
+                      className={`px-3 py-1 border rounded-full text-sm ${selectedCategory === 'culture' ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 hover:bg-gray-100'}`}
+                    >
+                      Culture
+                    </button>
+                    <button 
+                      onClick={() => setSelectedCategory('adventure')}
+                      className={`px-3 py-1 border rounded-full text-sm ${selectedCategory === 'adventure' ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 hover:bg-gray-100'}`}
+                    >
+                      Adventure
+                    </button>
+                    <button 
+                      onClick={() => setSelectedCategory('nightlife')}
+                      className={`px-3 py-1 border rounded-full text-sm ${selectedCategory === 'nightlife' ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 hover:bg-gray-100'}`}
+                    >
+                      Nightlife
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-700 mb-2">Rating</p>
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <Star 
+                        key={rating}
+                        size={20}
+                        className="text-gray-300 hover:text-yellow-400 cursor-pointer"
+                      />
+                    ))}
+                    <span className="ml-2 text-sm text-gray-600">& Up</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex space-x-2 border border-gray-300 rounded-lg overflow-hidden">
+            <button 
+              onClick={() => setViewMode('grid')} 
+              className={`px-4 py-3 ${viewMode === 'grid' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-4 py-3 ${viewMode === 'list' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            >
+              List
+            </button>
+          </div>
+        </div>
+
+        {/* Featured Section */}
+        {activeTab === 'discover' && (
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Itineraries</h2>
+            <div className="relative rounded-xl overflow-hidden h-96">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-70"></div>
+              <img 
+                src="/api/placeholder/1200/600" 
+                alt="Goa beaches aerial view" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 left-0 p-8 text-white">
+                <div className="flex items-center space-x-2 mb-4">
+                  <span className="bg-indigo-600 text-white px-2 py-1 rounded text-sm font-medium">Featured</span>
+                  <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded text-sm">24 Hours</span>
+                </div>
+                <h3 className="text-3xl font-bold mb-2">24 Hours in Goa: Beach Paradise</h3>
+                <p className="text-white/80 mb-4 max-w-2xl">Experience the perfect day in Goa with this carefully curated itinerary that takes you from sunrise yoga on Palolem Beach to sunset cocktails at Anjuna.</p>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                      <img src="/api/placeholder/40/40" alt="Critic avatar" className="rounded-full" />
+                    </div>
+                    <span>by <strong>Maya Fernandes</strong></span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Star size={18} className="text-yellow-400 fill-current" />
+                    <span>4.8</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <BookOpen size={16} />
+                    <span>12.4k views</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Popular Categories */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Browse by Category</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map((category) => (
+              <div 
+                key={category.id}
+                className="relative rounded-lg overflow-hidden h-32 cursor-pointer group"
+                onClick={() => setSelectedCategory(category.id)}
+              >
+                <div className="absolute inset-0 bg-black opacity-40 group-hover:opacity-60 transition"></div>
+                <img 
+                  src={`/api/placeholder/300/200`} 
+                  alt={category.name} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">{category.name}</span>
+                </div>
               </div>
             ))}
           </div>
-        ))}
-      </div>
-    );
-    return (
-      <div className="bg-white shadow-md rounded-lg p-4 mt-4">
-        {renderReviewSection('Destination Reviews', userReviews.destinations)}
-        {renderReviewSection('Hotel Reviews', userReviews.hotels)}
-      </div>
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <nav className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="text-2xl font-bold">TravelExplorer</div>
-          <p className="text-sm">Discover. Explore. Experience.</p>
         </div>
-      </nav>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-1">
-            <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2 flex items-center">
-                  <MapPinIcon /> Select State
-                </label>
-                <select 
-                  value={selectedState} 
-                  onChange={(e) => {
-                    setSelectedState(e.target.value);
-                    setSelectedCity('');
-                  }}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Choose State</option>
-                  {states.map(state => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2 flex items-center">
-                  <MapPinIcon /> Select City
-                </label>
-                <select 
-                  value={selectedCity} 
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  disabled={!selectedState}
-                >
-                  <option value="">Choose City</option>
-                  {cities.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
+        {/* Itineraries Grid/List */}
+        <div className="mb-10">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {activeTab === 'discover' ? 'Popular Itineraries' : 
+               activeTab === 'following' ? 'From Critics You Follow' :
+               activeTab === 'saved' ? 'Saved Itineraries' : 'Your Itineraries'}
+            </h2>
+            <select className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option>Most Popular</option>
+              <option>Newest First</option>
+              <option>Highest Rated</option>
+              <option>Duration: Short to Long</option>
+            </select>
+          </div>
+          
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
-
-            <div className="space-y-6">
-              {renderWeatherWidget()}
-              {renderTravelTips()}
-              {renderBudgetCalculator()}
+          ) : filteredItineraries.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No itineraries found</h3>
+              <p className="text-gray-500">Try adjusting your search or filters</p>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredItineraries.map((itinerary) => (
+                <div key={itinerary.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition cursor-pointer border border-gray-100">
+                  <div className="relative">
+                    <img 
+                      src={`/api/placeholder/400/240`} 
+                      alt={itinerary.title} 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-3 left-3 flex space-x-2">
+                      <span className="bg-white/90 backdrop-blur-sm text-indigo-600 px-2 py-1 rounded text-xs font-medium">{itinerary.category}</span>
+                      <span className="bg-white/90 backdrop-blur-sm text-gray-700 px-2 py-1 rounded text-xs font-medium flex items-center space-x-1">
+                        <Clock size={12} />
+                        <span>{itinerary.duration}</span>
+                      </span>
+                    </div>
+                    <button className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white">
+                      <Heart size={18} className="text-gray-600 hover:text-red-500" />
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Map size={16} className="text-gray-500" />
+                      <span className="text-sm text-gray-600">{itinerary.location}</span>
+                    </div>
+                    <h3 className="font-bold text-lg mb-2 text-gray-900">{itinerary.title}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{itinerary.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                          <img src="/api/placeholder/32/32" alt="Critic avatar" className="rounded-full" />
+                        </div>
+                        <span className="text-sm text-gray-700">{itinerary.author}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Star size={16} className="text-yellow-400 fill-current" />
+                        <span className="text-sm font-medium">{itinerary.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredItineraries.map((itinerary) => (
+                <div key={itinerary.id} className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 flex hover:shadow-md transition cursor-pointer">
+                  <div className="w-48 h-full">
+                    <img 
+                      src={`/api/placeholder/200/200`} 
+                      alt={itinerary.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-grow p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-medium">{itinerary.category}</span>
+                        <span className="text-sm text-gray-600 flex items-center">
+                          <Map size={14} className="mr-1" />
+                          {itinerary.location}
+                        </span>
+                        <span className="text-sm text-gray-600 flex items-center">
+                          <Clock size={14} className="mr-1" />
+                          {itinerary.duration}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-lg mb-2 text-gray-900">{itinerary.title}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{itinerary.description}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                          <img src="/api/placeholder/32/32" alt="Critic avatar" className="rounded-full" />
+                        </div>
+                        <span className="text-sm text-gray-700">{itinerary.author}</span>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <Star size={16} className="text-yellow-400 fill-current" />
+                          <span className="text-sm font-medium">{itinerary.rating}</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button className="p-1.5 rounded-full hover:bg-gray-100">
+                            <Heart size={18} className="text-gray-600 hover:text-red-500" />
+                          </button>
+                          <button className="p-1.5 rounded-full hover:bg-gray-100">
+                            <Share size={18} className="text-gray-600" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Load More */}
+          <div className="flex justify-center mt-8">
+            <button className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium px-6 py-2.5 rounded-lg flex items-center space-x-2">
+              <span>Load More</span>
+              <ChevronDown size={16} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Critics You Might Like */}
+        {activeTab === 'discover' && (
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Critics You Might Like</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {critics.map((critic) => (
+                <div key={critic.id} className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition">
+                  <div className="h-20 w-20 rounded-full bg-gray-200 mb-4 overflow-hidden">
+                    <img src="/api/placeholder/80/80" alt={critic.name} className="w-full h-full object-cover" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1">{critic.name}</h3>
+                  <p className="text-gray-600 text-sm mb-3">{critic.specialty}</p>
+                  <div className="flex items-center space-x-1 mb-4">
+                    <Star size={14} className="text-yellow-400 fill-current" />
+                    <span className="text-sm">{critic.rating} · {critic.reviews} reviews</span>
+                  </div>
+                  <button className="w-full px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition">
+                    Follow
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
+        )}
+      </main>
 
-          <div className="md:col-span-2">
-            
-
-            {renderContent()}
-            {renderUserReviews()}
-          </div>
-        </div>
-      </div>
-
-      <footer className="bg-gray-800 text-white py-6 mt-8">
-        <div className="container mx-auto text-center">
-          <p>&copy; 2024 TravelExplorer. All Rights Reserved.</p>
-        </div>
-      </footer>
+      
     </div>
   );
 };
 
-export default TourismWebsite;
+// Sample data
+const categories = [
+  { id: 'food', name: 'Food & Dining' },
+  { id: 'culture', name: 'Culture & Arts' },
+  { id: 'adventure', name: 'Adventure' },
+  { id: 'nightlife', name: 'Nightlife' }
+];
+
+const critics = [
+  { id: 1, name: 'Maya Fernandes', specialty: 'Food & Beach Destinations', rating: 4.9, reviews: 124 },
+  { id: 2, name: 'Raj Kumar', specialty: 'Adventure & Wildlife', rating: 4.7, reviews: 98 },
+  { id: 3, name: 'Sarah Johnson', specialty: 'Cultural Experiences', rating: 4.8, reviews: 156 },
+  { id: 4, name: 'Alex Chen', specialty: 'Urban Exploration', rating: 4.6, reviews: 87 }
+];
+
+const sampleItineraries = [
+  {
+    id: 1,
+    title: '24 Hours in Goa: Beach Paradise',
+    location: 'Goa, India',
+    category: 'adventure',
+    duration: '24 hours',
+    description: 'Experience the perfect day in Goa with this carefully curated itinerary that takes you from sunrise yoga on Palolem Beach to sunset cocktails at Anjuna.',
+    author: 'Maya Fernandes',
+    rating: 4.8
+  },
+  {
+    id: 2,
+    title: 'Mumbai Food Crawl: Street Food Gems',
+    location: 'Mumbai, India',
+    category: 'food',
+    duration: '6 hours',
+    description: 'Discover the hidden street food treasures of Mumbai with this expertly crafted food tour covering everything from vada pav to pav bhaji.',
+    author: 'Raj Kumar',
+    rating: 4.7
+  },
+  {
+    id: 3,
+    title: 'Delhi Historical Tour: Monuments & Museums',
+    location: 'Delhi, India',
+    category: 'culture',
+    duration: '2 days',
+    description: 'Explore the rich history of Delhi through its monuments, museums and cultural sites with this comprehensive two-day itinerary.',
+    author: 'Sarah Johnson',
+    rating: 4.9
+  },
+  {
+    id: 4,
+    title: 'Bangalore Pub Crawl: Best Craft Breweries',
+    location: 'Bangalore, India',
+    category: 'nightlife',
+    duration: '5 hours',
+    description: "Take a tour of Bangalore's thriving craft beer scene with stops at the city's best microbreweries and pubs.",
+    author: 'Alex Chen',
+    rating: 4.6
+  },
+  {
+    id: 5,
+    title: 'Kashmir Valley: Natural Wonders Tour',
+    location: 'Kashmir, India',
+    category: 'adventure',
+    duration: '3 days',
+    description: 'Experience the breathtaking natural beauty of Kashmir Valley with this three-day tour of its lakes, gardens, and mountain vistas.',
+    author: 'Maya Fernandes',
+    rating: 4.9
+  },
+  {
+    id: 6,
+    title: 'Jaipur Royal Tour: Palaces & Heritage',
+    location: 'Jaipur, India',
+    category: 'culture',
+    duration: '2 days',
+    description: 'Discover the royal heritage of Jaipur with this two-day tour of its magnificent palaces, forts and cultural landmarks.',
+    author: 'Raj Kumar',
+    rating: 4.7
+  },
+  {
+    id: 7,
+    title: 'Kerala Backwaters Cruise',
+    location: 'Kerala, India',
+    category: 'adventure',
+    duration: '1 day',
+    description: 'Experience the serene beauty of Kerala\'s backwaters with this day-long houseboat cruise through scenic canals and villages.',
+    author: 'Sarah Johnson',
+    rating: 4.8
+  },
+  {
+    id: 8,
+    title: 'Kolkata Cultural Immersion',
+    location: 'Kolkata, India',
+    category: 'culture',
+    duration: '3 days',
+    description: 'Immerse yourself in the rich cultural heritage of Kolkata with this three-day tour covering literature, art, music, and cuisine.',
+    author: 'Alex Chen',
+    rating: 4.5
+  },
+  {
+    id: 9,
+    title: 'Udaipur Romantic Getaway',
+    location: 'Udaipur, India',
+    category: 'culture',
+    duration: '2 days',
+    description: 'Experience the romantic city of lakes with this specially curated itinerary for couples featuring palace visits, boat rides, and candlelit dinners.',
+    author: 'Maya Fernandes',
+    rating: 4.9
+  }
+];
+
+export default ItinerariesPage;
