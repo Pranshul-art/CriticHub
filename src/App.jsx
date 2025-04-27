@@ -6,11 +6,12 @@ import LoadingSpinner from './components2/ui/LoadingSpinner';
 
 
 const HomePage = lazy(() => import('./pages/HomePage'));
-// const CriticProfile = lazy(() => import('./pages/CriticProfile'));
+const CriticProfile = lazy(() => import('./pages/CriticProfile'));
 // const DetailPage = lazy(() => import('./pages/DetailPage'));
- const ItineraryBuilder = lazy(() => import('./components/Prototype'));
+ const ItineraryBuilder = lazy(() => import('./pages/Itinerary'));
+ const Explore=lazy(()=>import('./pages/Explore'));
 // const EducationExplorer = lazy(() => import('./pages/EducationExplorer'));
-// const CreationStudio = lazy(() => import('./pages/CreationStudio'));
+//const CreationStudio = lazy(() => import('./pages/'));
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -43,11 +44,13 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/itinerary" element={<ItineraryBuilder />} />
-                {/* <Route path="/critic/:id" element={<CriticProfile />} />
-                <Route path="/detail/:type/:id" element={<DetailPage />} />
+                <Route path="/critic/:id" element={<CriticProfile />} />
+                <Route path="/create" element={<CriticProfile />} />
+                <Route path='/explore' element={<Explore/>}/>
+                {/*<Route path="/detail/:type/:id" element={<DetailPage />} />
                 
                 <Route path="/education" element={<EducationExplorer />} />
-                <Route path="/create" element={<CreationStudio />} /> */}
+                 */}
               </Routes>
             </Suspense>
             <Footer />

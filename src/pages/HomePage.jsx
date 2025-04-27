@@ -166,19 +166,23 @@ const HomePage = () => {
     },1300);
     // Handle window resize
     const handleResize = () => {
-        if (!container || !renderer || !camera) return;
-        
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-      };
+      if (!globeContainerRef.current || !rendererRef.current || !cameraRef.current) return;
+      
+      const container = globeContainerRef.current;
+      const renderer = rendererRef.current;
+      const camera = cameraRef.current;
+      
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
       
       window.addEventListener('resize', handleResize);
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (rendererRef.current && rendererRef.current.domElement) {
-        container.removeChild(rendererRef.current.domElement);
+      if (rendererRef.current && rendererRef.current.domElement && globeContainerRef.current) {
+        globeContainerRef.current.removeChild(rendererRef.current.domElement);
       }
       clearTimeout(Timeout);
     };
@@ -240,12 +244,10 @@ const HomePage = () => {
       {/* Hero Section with 3D Globe */}
       <section className=" h-screen max-h-[800px] overflow-hidden bg-gradient-to-b from-dark to-light-dark dark:from-navy-900 dark:to-navy-800">
         {/* Globe Container */}
-        setTimeout({
-          <div 
+        <div 
           ref={globeContainerRef}
           className="absolute inset-0 opacity-100"
         />
-        },10000)
         
         
         
@@ -351,7 +353,8 @@ const HomePage = () => {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-serif text-4xl md:text-5xl font-bold mb-6">Become a Critic</h2>
             <p className="text-xl mb-8 opacity-90">Share your unique perspective and help others discover what truly matters.</p>
-            <button className="bg-white text-coral-500 font-bold text-lg px-8 py-4 rounded-xl hover:bg-navy-900 hover:text-white transition-colors shadow-lg">
+            <button className="bg-white text-coral-500 font-bold text-lg px-8 py-4 rounded-xl hover:bg-navy-900 hover:text-white transition-colors shadow-lg" 
+            onClick={()=>{window.location.href='/create'}}>
               Start Creating
             </button>
           </div>

@@ -33,7 +33,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
           ? 'bg-white/90 dark:bg-navy-900/90 backdrop-blur-md py-3 shadow-md' 
-          : 'bg-transparent py-5'
+          : 'bg-transparent py-5 text-white'
       }`}
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
@@ -41,21 +41,21 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
         <Link to="/" className="flex items-center">
           <div className="relative">
             <div className="absolute inset-0 bg-coral-500 rounded-full blur-sm opacity-50"></div>
-            <div className="h-10 w-10 bg-gradient-to-br from-coral-500 to-teal rounded-full flex items-center justify-center relative">
+            <div className="h-10 w-10 bg-gradient-to-br from-navy-900 to-teal rounded-full flex items-center justify-center relative">
               <span className="font-serif text-white text-xl font-bold">C</span>
             </div>
           </div>
-          <span className="font-serif text-2xl font-bold ml-2 text-gray dark:text-cream">
+          <span className={`font-serif text-2xl font-bold ml-2 ${isScrolled?"text-navy-900":'text-white'}  dark:text-cream`}>
             Critics<span className="text-coral-500 ">Hub</span>
           </span>
         </Link>
         
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <NavLink to="/">Discover</NavLink>
-          <NavLink to="/itinerary">Itineraries</NavLink>
-          <NavLink to="/education">Education</NavLink>
-          <NavLink to="/create">Create</NavLink>
+        <nav className={`hidden md:flex  items-center space-x-8`}>
+          <NavLink  to="/">Discover</NavLink>
+          <NavLink  to="/Itinerary">Itineraries</NavLink>
+          <NavLink  to="/explore">Explore</NavLink>
+          <NavLink  to="/create">Create</NavLink>
         </nav>
         
         {/* Right Side Actions */}
@@ -174,7 +174,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
 };
 
 // Desktop Navigation Link Component
-const NavLink = ({ to, children }) => {
+const NavLink = ({ to, children, props }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   
@@ -182,14 +182,14 @@ const NavLink = ({ to, children }) => {
     <Link 
       to={to} 
       className={`relative font-medium transition-colors ${
-        isActive ? 'text-coral-500' : 'text-navy-700 dark:text-cream hover:text-coral-500 dark:hover:text-coral-500'
+        isActive ? `text-coral-500  pb-1` : ' dark:text-cream hover:text-coral-500 dark:hover:text-coral-500'
       }`}
     >
       {children}
       {isActive && (
         <motion.div
           layoutId="navHighlight"
-          className="absolute bottom-0 left-0 right-0 h-1 bg-coral-500 rounded-full"
+          className="absolute  bottom-0 left-0 right-0 h-1 bg-coral-500 rounded-full"
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}

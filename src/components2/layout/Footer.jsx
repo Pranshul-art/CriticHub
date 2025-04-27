@@ -14,7 +14,7 @@ const Footer = () => {
             <Link to="/" className="flex items-center mb-6">
               <div className="relative">
                 <div className="absolute inset-0 bg-coral-500 rounded-full blur-sm opacity-50"></div>
-                <div className="h-10 w-10 bg-gradient-to-br from-coral-500 to-teal rounded-full flex items-center justify-center relative">
+                <div className="h-10 w-10 bg-gradient-to-br from-navy-900 to-teal rounded-full flex items-center justify-center relative">
                   <span className="font-serif text-white text-xl font-bold">C</span>
                 </div>
               </div>

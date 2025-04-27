@@ -75,7 +75,7 @@ const QuickNavigation = () => {
   };
 
   return (
-    <section className="py-12 bg-light-cream dark:bg-navy-900">
+    <section className="py-12 bg-light-cream dark:bg-navy-900 w-full rounded-3xl">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-serif font-bold text-navy-900 dark:text-cream">Explore Categories</h2>
@@ -88,7 +88,7 @@ const QuickNavigation = () => {
         </div>
         
         <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
