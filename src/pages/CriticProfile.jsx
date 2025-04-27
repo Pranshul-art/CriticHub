@@ -474,16 +474,9 @@ export default function CriticDashboard() {
             <div className="text-center">
               <h3 className="text-xl font-medium text-gray-700 mb-2">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h3>
               <p className="text-gray-500">This section is under development</p>
-              <h2 className="text-2xl font-serif font-bold text-navy-900 dark:text-cream mb-6">Create New Content</h2>
-        
-              {/* QuickNavigation Component */}
-              <QuickNavigation />
               
-              {/* Content Creation Area (placeholder) */}
-              <div className="mt-12 bg-white dark:bg-navy-800 rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-medium mb-4 text-navy-900 dark:text-cream">Your Recent Drafts</h3>
-                <p className="text-navy-700 dark:text-gray-300">No drafts found. Start creating by selecting a category above.</p>
-              </div>
+              
+              
             </div>
           </div>
         );

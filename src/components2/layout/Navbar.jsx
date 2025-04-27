@@ -104,9 +104,9 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 <Link to="/profile" className="block px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700">
                   My Profile
                 </Link>
-                <Link to="/settings" className="block px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700">
+                {/* <Link to="/settings" className="block px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700">
                   Settings
-                </Link>
+                </Link> */}
                 <Link to="/saved" className="block px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700">
                   Saved Critiques
                 </Link>

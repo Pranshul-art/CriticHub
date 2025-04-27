@@ -37,21 +37,12 @@ const Itineraries=()=>{
       setFilteredItineraries(filtered);
     }, [searchQuery, activeFilter]);
     return <div className="   ">
-        <div className="container  bg-gray-500 pt-20 ">
-            <div className="sticky top-20 z-30 flex justify-center  ">
-                <div className='flex justify-center py-3 px-0.5 bg-white rounded-full overflow-x-auto whitespace-nowrap hide-scrollbar'>
-                        <OptionsDesign active={activeFilter === 'all'} onClick={() => setActiveFilter('all')}>All</OptionsDesign>
-                        <OptionsDesign active={activeFilter === 'food'} onClick={() => setActiveFilter('food')}>Food & Drink</OptionsDesign>
-                        <OptionsDesign active={activeFilter === 'beaches'} onClick={() => setActiveFilter('beaches')}>Beaches</OptionsDesign>
-                        <OptionsDesign active={activeFilter === 'nightlife'} onClick={() => setActiveFilter('nightlife')}>Nightlife</OptionsDesign>
-                        <OptionsDesign active={activeFilter === 'videos'} onClick={() => setActiveFilter('videos')}>Videos</OptionsDesign>
-                        <OptionsDesign active={activeFilter === 'trending'} onClick={() => setActiveFilter('trending')}>Trending</OptionsDesign>
-                </div>
-            </div>
+        <div className="container  bg-slate-200 pt-20 ">
+            
             
            
             
-            <div className="bg-gray-50 min-h-screen pt-8">
+            <div className="bg-purple-50 min-h-screen pt-8">
                 <h1 className="font-bold text-3xl pb-6">Featured Itineraries</h1>
 
                 {/* Content Grid */}
@@ -73,7 +64,7 @@ const Itineraries=()=>{
                     
                     {/* Sidebar */}
                     <div className="hidden lg:block">
-                        <div className="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-40">
+                        <div className="bg-white rounded-lg shadow-md p-6 mb-6 ">
                             <h3 className="text-xl font-bold mb-4">Top Critics</h3>
                             
                             <div className="space-y-4">
