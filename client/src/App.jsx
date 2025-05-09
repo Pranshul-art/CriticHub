@@ -9,10 +9,11 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const CriticProfile = lazy(() => import('./pages/CriticProfile'));
 const ItineraryBuilder = lazy(() => import('./pages/Itinerary'));
 const Explore = lazy(() => import('./pages/Explore'));
+const SignUp = lazy(()=> import('./pages/SignUp'));
+const Signin = lazy(()=> import('./pages/Signin'));
+const SpecificCategory = lazy(()=> import('./pages/SpecificCategory'));
 
-// Direct imports for troubleshooting
-import SignUp from './pages/SignUp';
-import Signin from './pages/Signin';
+
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -54,6 +55,7 @@ function App() {
                     <Route path="/critic/:id" element={<CriticProfile />} />
                     <Route path="/create" element={<CriticProfile />} />
                     <Route path="/explore" element={<Explore />} />
+                    <Route path="/explore/category/:categoryId" element={<SpecificCategory/>}/>
                   </Routes>
                 </Suspense>
                 <Footer />

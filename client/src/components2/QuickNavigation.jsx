@@ -123,7 +123,7 @@ const QuickNavigation = () => {
         >
           {categories.map((category) => (
             <motion.div key={category.id} variants={itemVariants} className="relative">
-              <Link to={`/category/${category.id}`}>
+              <Link to={`/explore/category/${category.id}`}>
                 <div
                   className={`${category.backgroundColor} rounded-xl p-4 h-32 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 duration-300`}
                 >
