@@ -20,7 +20,7 @@ const upload = multer({
 postRouter.get("/featured", authMiddleware, featured);
 
 // category specific content 
-postRouter.get("/category/:categoryName", authMiddleware, category);
+postRouter.get("/category/:categoryId", authMiddleware, category);
 
 //get all categories
 postRouter.get("/categories", authMiddleware, CategoryController);

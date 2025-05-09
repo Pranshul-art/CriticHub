@@ -230,7 +230,7 @@ interface QueryParam{
 }   
 export const category = async (req: Request<any, any, any, QueryParam>, res: Response): Promise<void> => {
   try {
-    const { categoryId } = req.params; // Use categoryId from params
+    const { categoryId }: { categoryId: string } = req.params; 
     const { sort = 'latest', page = '1', limit = "10" } = req.query;
 
     const parsedPage = parseInt(page);
