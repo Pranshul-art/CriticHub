@@ -128,11 +128,11 @@ exports.Prisma.UserScalarFieldEnum = {
   tag: 'tag',
   age: 'age',
   gender: 'gender',
-  isCritic: 'isCritic',
-  bio: 'bio',
-  profileImage: 'profileImage',
   verified: 'verified',
+  bio: 'bio',
   createdAt: 'createdAt',
+  isCritic: 'isCritic',
+  profileImage: 'profileImage',
   updatedAt: 'updatedAt'
 };
 
@@ -140,9 +140,9 @@ exports.Prisma.CategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
   description: 'description',
-  icon: 'icon',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  icon: 'icon'
 };
 
 exports.Prisma.PostScalarFieldEnum = {
@@ -152,11 +152,11 @@ exports.Prisma.PostScalarFieldEnum = {
   content: 'content',
   location: 'location',
   duration: 'duration',
-  categoryId: 'categoryId',
-  tags: 'tags',
-  postDate: 'postDate',
   uploadMedia: 'uploadMedia',
-  updatedAt: 'updatedAt'
+  categoryId: 'categoryId',
+  postDate: 'postDate',
+  updatedAt: 'updatedAt',
+  tags: 'tags'
 };
 
 exports.Prisma.ViewScalarFieldEnum = {
@@ -168,9 +168,9 @@ exports.Prisma.ViewScalarFieldEnum = {
 
 exports.Prisma.FollowerScalarFieldEnum = {
   id: 'id',
+  createdAt: 'createdAt',
   followerId: 'followerId',
-  followingId: 'followingId',
-  createdAt: 'createdAt'
+  followingId: 'followingId'
 };
 
 exports.Prisma.CommentScalarFieldEnum = {

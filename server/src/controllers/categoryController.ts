@@ -6,11 +6,22 @@ const prisma= new PrismaClient();
 //get categories logic 
 export const CategoryController= async (req:Request, res:Response)=>{
     try{
-        const categories = await prisma.category.findMany();
-        
+        const categories = await prisma.category.findMany({
+            select:{
+                id: true,
+                name: true,
+                description: true,
+                icon: true
+            }
+        });
+        //console.log("Fetched categories:", categories);
+        const sanitizedCategories=categories.map((category)=>({
+            ...category,
+            icon: category.icon || '',
+        }));
         res.status(200).json({
             success: true,
-            data: categories,
+            data: sanitizedCategories,
             message: "Categories fetched successfully"
         });
     }catch(err){

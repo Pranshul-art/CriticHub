@@ -49,7 +49,7 @@ function App() {
                 <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
                 <Suspense fallback={<LoadingSpinner />}>
                   <Routes>
-                    <Route path="/dashboard" element={<HomePage />} />
+                    <Route path="/dashboard" element={<HomePage />} ></Route>
                     <Route path="/itinerary" element={<ItineraryBuilder />} />
                     <Route path="/critic/:id" element={<CriticProfile />} />
                     <Route path="/create" element={<CriticProfile />} />

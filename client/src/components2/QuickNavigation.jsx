@@ -4,47 +4,47 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 
 const hardcodedStyles = {
-  Website: {
+  WEBSITES: {
     activityLevel: 0.89,
     backgroundColor: 'bg-rose-100 dark:bg-rose-900/30',
     iconColor: 'text-rose-600 dark:text-rose-400',
   },
-  "Food & Dining": {
+  "FOOD & DINING": {
     activityLevel: 0.9,
     backgroundColor: 'bg-amber-100 dark:bg-amber-900/30',
     iconColor: 'text-amber-600 dark:text-amber-400',
   },
-  Travel: {
+  TRAVEL: {
     activityLevel: 0.85,
     backgroundColor: 'bg-blue-100 dark:bg-blue-900/30',
     iconColor: 'text-blue-600 dark:text-blue-400',
   },
-  Education: {
+  EDUCATION: {
     activityLevel: 0.7,
     backgroundColor: 'bg-green-100 dark:bg-green-900/30',
     iconColor: 'text-green-600 dark:text-green-400',
   },
-  Entertainment: {
+  ENTERTAINMENT: {
     activityLevel: 0.65,
     backgroundColor: 'bg-purple-100 dark:bg-purple-900/30',
     iconColor: 'text-purple-600 dark:text-purple-400',
   },
-  Nightlife: {
+  NIGHTLIFE: {
     activityLevel: 0.8,
     backgroundColor: 'bg-fuchsia-100 dark:bg-fuchsia-900/30',
     iconColor: 'text-fuchsia-600 dark:text-fuchsia-400',
   },
-  Shopping: {
+  SHOPPING: {
     activityLevel: 0.75,
     backgroundColor: 'bg-pink-100 dark:bg-pink-900/30',
     iconColor: 'text-pink-600 dark:text-pink-400',
   },
-  Movies: {
+  MOVIES: {
     activityLevel: 0.79,
     backgroundColor: 'bg-cyan-100 dark:bg-cyan-900/30',
     iconColor: 'text-cyan-600 dark:text-cyan-400',
   },
-  Sports: {
+  SPORTS: {
     activityLevel: 0.59,
     backgroundColor: 'bg-emerald-100 dark:bg-emerald-900/30',
     iconColor: 'text-emerald-600 dark:text-emerald-400',
@@ -58,11 +58,17 @@ const QuickNavigation = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/v1/content/categories');
+        const response = await axios.get('http://localhost:8080/api/v1/content/categories', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
         const fetchedCategories = response.data.data.map((category) => ({
           ...category,
-          ...hardcodedStyles[category.name], // Merge hardcoded styles with backend data
+          ...hardcodedStyles[category.name], 
         }));
+
         setCategories(fetchedCategories);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -72,13 +78,12 @@ const QuickNavigation = () => {
     fetchCategories();
   }, []);
 
-  // Animation variants for staggered appearance
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.1, 
       },
     },
   };
@@ -113,8 +118,8 @@ const QuickNavigation = () => {
           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4"
           variants={containerVariants}
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
+          animate="visible" 
+          viewport={{ once: true, margin: '-100px' }} 
         >
           {categories.map((category) => (
             <motion.div key={category.id} variants={itemVariants} className="relative">
@@ -126,8 +131,13 @@ const QuickNavigation = () => {
                     <div
                       className={`${category.iconColor} p-2 rounded-lg bg-white dark:bg-navy-800 bg-opacity-60 dark:bg-opacity-20`}
                     >
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                        <path d={category.icon || ''} />
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="currentColor" 
+                        className="w-6 h-6"
+                      >
+                        <path d={category.icon} />
                       </svg>
                     </div>
 

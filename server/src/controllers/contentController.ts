@@ -228,149 +228,147 @@ interface QueryParam{
     page?: string,
     limit?: string
 }   
-export const category=async (req:Request<any, any, any, QueryParam>, res:Response):Promise<void>=>{
-    try {
-        const { categoryName } = req.params;
-        const { sort = 'latest', page = '1', limit = "10" } = req.query;
-        
-        const parsedPage = parseInt(page);
-        const parsedLimit = parseInt(limit);
-        const skip = (parsedPage - 1) * parsedLimit;
-    
-        const category = await prisma.category.findFirst({
-          where: {
-            name: {
-              equals: categoryName,
-              mode: 'insensitive' 
-            }
-          }
-        });
-    
-        if (!category) {
-           res.status(404).json({ 
-            success: false, 
-            message: `Category '${categoryName}' not found` 
-          });
-          return;
-        }
+export const category = async (req: Request<any, any, any, QueryParam>, res: Response): Promise<void> => {
+  try {
+    const { categoryId } = req.params; // Use categoryId from params
+    const { sort = 'latest', page = '1', limit = "10" } = req.query;
 
-        let orderBy = {};
-        if (sort === 'popular') {
-          const popularPostIds = await prisma.view.groupBy({
-            by: ['postId'],
-            where: {
-              post: {
-                categoryId: category.id
-              }
-            },
-            _count: {
-              postId: true
-            },
-            orderBy: {
-              _count: {
-                postId: 'desc'
-              }
-            },
-            skip,
-            take: parsedLimit
-          });
+    const parsedPage = parseInt(page);
+    const parsedLimit = parseInt(limit);
+    const skip = (parsedPage - 1) * parsedLimit;
 
-          const posts = await prisma.post.findMany({
-            where: {
-              id: { in: popularPostIds.map(p => p.postId) }
+    const category = await prisma.category.findUnique({
+      where: {
+        id: categoryId, 
+      },
+    });
+
+    if (!category) {
+      res.status(404).json({
+        success: false,
+        message: `Category not found`,
+      });
+      return;
+    }
+
+    let orderBy = {};
+    if (sort === 'popular') {
+      // Fetch popular posts based on views
+      const popularPostIds = await prisma.view.groupBy({
+        by: ['postId'],
+        where: {
+          post: {
+            categoryId: category.id,
+          },
+        },
+        _count: {
+          postId: true,
+        },
+        orderBy: {
+          _count: {
+            postId: 'desc',
+          },
+        },
+        skip,
+        take: parsedLimit,
+      });
+
+      const posts = await prisma.post.findMany({
+        where: {
+          id: { in: popularPostIds.map((p) => p.postId) },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              tag: true,
+              profileImage: true,
+              isCritic: true,
             },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  tag: true,
-                  profileImage: true,
-                  isCritic: true
-                }
-              },
-              category: true,
-              _count: {
-                select: {
-                  views: true,
-                  comments: true
-                }
-              }
-            }
-          });
-    
-          // total count for pagination
-          const totalPosts = await prisma.post.count({
-            where: {
-              categoryId: category.id
-            }
-          });
-    
-          res.json({
-            success: true,
-            data: posts,
-            pagination: {
-              page: parsedPage,
-              limit: parsedLimit,
-              totalItems: totalPosts,
-              totalPages: Math.ceil(totalPosts / parsedLimit)
-            }
-          });
-        } else {
-          orderBy = { postDate: 'desc' };
-        }
-    
-        // Standard query with pagination
-        const [posts, totalPosts] = await Promise.all([
-          prisma.post.findMany({
-            where: {
-              categoryId: category.id
+          },
+          category: true,
+          _count: {
+            select: {
+              views: true,
+              comments: true,
             },
-            orderBy,
-            skip,
-            take: parsedLimit,
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  tag: true,
-                  profileImage: true,
-                  isCritic: true
-                }
-              },
-              category: true,
-              _count: {
-                select: {
-                  views: true,
-                  comments: true
-                }
-              }
-            }
-          }),
-          prisma.post.count({
-            where: {
-              categoryId: category.id
-            }
-          })
-        ]);
-    
-         res.json({
-          success: true,
-          data: posts,
-          pagination: {
-            page: parsedPage,
-            limit: parsedLimit,
-            totalItems: totalPosts,
-            totalPages: Math.ceil(totalPosts / parsedLimit)
-          }
-        });
-        return;
-      } catch (error) {
-        console.error('Error fetching category content:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch category content' });
-      }
-}
+          },
+        },
+      });
+
+      // Total count for pagination
+      const totalPosts = await prisma.post.count({
+        where: {
+          categoryId: category.id,
+        },
+      });
+
+      res.json({
+        success: true,
+        data: posts,
+        pagination: {
+          page: parsedPage,
+          limit: parsedLimit,
+          totalItems: totalPosts,
+          totalPages: Math.ceil(totalPosts / parsedLimit),
+        },
+      });
+      return;
+    } else {
+      orderBy = { postDate: 'desc' };
+    }
+
+    // Standard query with pagination
+    const [posts, totalPosts] = await Promise.all([
+      prisma.post.findMany({
+        where: {
+          categoryId: category.id,
+        },
+        orderBy,
+        skip,
+        take: parsedLimit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              tag: true,
+              profileImage: true,
+              isCritic: true,
+            },
+          },
+          category: true,
+          _count: {
+            select: {
+              views: true,
+              comments: true,
+            },
+          },
+        },
+      }),
+      prisma.post.count({
+        where: {
+          categoryId: category.id,
+        },
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      data: posts,
+      pagination: {
+        page: parsedPage,
+        limit: parsedLimit,
+        totalItems: totalPosts,
+        totalPages: Math.ceil(totalPosts / parsedLimit),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching category content:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch category content' });
+  }
+};
 
 //view for a post and update analytics logic
 export const postView= async(req:Request, res:Response)=>{
