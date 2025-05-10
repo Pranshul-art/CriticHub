@@ -1,77 +1,151 @@
+import React, { useEffect, useState } from "react";
 import { Clock, Heart, MapPin, MessageCircle, Share2 } from "lucide-react";
-import { useState } from "react";
+import axios from "axios";
 
-const ItineraryCard = ({ itinerary }) => {
-    const [liked, setLiked] = useState(false);
-    
-    return (
-      <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-        <div className="p-4">
-          <div className="flex items-center mb-3">
-            <div className="h-10 w-10 rounded-full overflow-hidden mr-3">
-              <img src={itinerary.profilePic} alt={itinerary.author} className="h-full w-full object-cover" />
-            </div>
-            <div>
-              <div className="font-bold text-gray-900">{itinerary.author}</div>
-              <div className="text-xs text-gray-500">{itinerary.timestamp}</div>
-            </div>
-          </div>
-          
-          <h3 className="text-xl font-bold mb-2">{itinerary.title}</h3>
-          
-          <div className="flex items-center mb-3 text-sm text-gray-600">
-            <div className="flex items-center mr-4">
-              <MapPin size={16} className="mr-1" />
-              {itinerary.location}
-            </div>
-            <div className="flex items-center">
-              <Clock size={16} className="mr-1" />
-              {itinerary.duration}
-            </div>
-          </div>
-          
-          <p className="text-gray-700 mb-4">{itinerary.content}</p>
-          
-          <div className="relative rounded-lg overflow-hidden mb-4">
-            <img src={itinerary.media} alt={itinerary.title} className="w-full h-64 object-cover" />
-            {itinerary.isVideo && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-black bg-opacity-50 rounded-full p-3">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex flex-wrap mb-4">
-            {itinerary.tags.map(tag => (
-              <span key={tag} className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-2 mb-2">
-                #{tag}
+const ItineraryCard = ({ itinerary, loggedInUserId }) => {
+  const [liked, setLiked] = useState(false);
+  const [fullContent, setFullContent] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(itinerary.user.isFollowed); // Initial state from backend
+
+  const trunc = () => {
+    setFullContent(!fullContent);
+  };
+
+  useEffect(() => {
+    setFullContent(false);
+  }, [window.scrollY]);
+
+  const handleFollowToggle = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/user/follow",
+        { followingId: itinerary.user.id }, // Pass the userId of the user to follow/unfollow
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Include the auth token
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setIsFollowing(!isFollowing); // Toggle the follow state
+      }
+    } catch (error) {
+      console.error("Error toggling follow state:", error);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-navy-800 rounded-3xl shadow-md p-6">
+      {/* User Info */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          {itinerary.user.profileImage ? (
+            <img
+              src={itinerary.user.profileImage}
+              alt={itinerary.user.username}
+              className="w-12 h-12 rounded-full"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-navy-900 flex items-center justify-center">
+              <span className="text-white font-bold">
+                {itinerary.user.username
+                  .split(" ")
+                  .map((word) => word[0])
+                  .join("")
+                  .toUpperCase()}
               </span>
-            ))}  
-          </div>
-          
-          <div className="flex items-center justify-between text-gray-500 border-t pt-3">
-            <button 
-              className={`flex items-center ${liked ? 'text-red-500' : ''}`} 
-              onClick={() => setLiked(!liked)}
-            >
-              <Heart size={20} className={`mr-1 ${liked ? 'fill-current' : ''}`} />
-              {itinerary.likes + (liked ? 1 : 0)}
-            </button>
-            <button className="flex items-center">
-              <MessageCircle size={20} className="mr-1" />
-              {itinerary.comments}
-            </button>
-            <button className="flex items-center">
-              <Share2 size={20} />
-            </button>
+            </div>
+          )}
+          <div className="ml-4">
+            <p className="text-sm font-bold">{itinerary.user.username}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{itinerary.user.tag}</p>
           </div>
         </div>
+
+        {/* Follow Button */}
+        {itinerary.user.id !== loggedInUserId && ( // Hide button if the post belongs to the logged-in user
+          <button
+            onClick={handleFollowToggle}
+            className={`px-4 py-1 text-sm font-medium rounded-full ${
+              isFollowing
+                ? "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                : "bg-coral-500 text-white hover:bg-coral-600"
+            }`}
+          >
+            {isFollowing ? "Following" : "Follow"}
+          </button>
+        )}
       </div>
-    );
-  };
+
+      {/* Title */}
+      <h2 className="text-xl font-semibold mb-2">{itinerary.title}</h2>
+
+      {/* Media */}
+      {itinerary.uploadMedia && (
+        <div className="mb-4">
+          {itinerary.uploadMedia.endsWith(".mp4") || itinerary.uploadMedia.endsWith(".webm") ? (
+            <video controls src={itinerary.uploadMedia} className="w-full rounded-lg" />
+          ) : (
+            <img src={itinerary.uploadMedia} alt={itinerary.title} className="w-full rounded-lg" />
+          )}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="p-3 bg-slate-100 rounded-lg cursor-pointer" onClick={trunc}>
+        <p
+          className={`text-sm ${fullContent ? "" : "line-clamp-3"} text-gray-600 dark:text-gray-400`}
+        >
+          {itinerary.content}
+        </p>
+      </div>
+
+      {/* Tags */}
+      {itinerary.tags && itinerary.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {itinerary.tags.map((tag, index) => (
+            <span
+              key={index}
+              className="bg-navy-700 text-white text-xs font-medium px-2 py-1 rounded-full"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Metadata */}
+      <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p>
+          <Clock size={16} className="inline-block mr-1" />
+          {itinerary.duration || "N/A"}
+        </p>
+        <p>
+          <MapPin size={16} className="inline-block mr-1" />
+          {itinerary.location || "N/A"}
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center justify-between text-gray-500 border-t pt-3">
+        <button
+          className={`flex items-center ${liked ? "text-red-500" : ""}`}
+          onClick={() => setLiked(!liked)}
+        >
+          <Heart size={20} className={`mr-1 ${liked ? "fill-current" : ""}`} />
+          {itinerary._count.views + (liked ? 1 : 0)}
+        </button>
+        <button className="flex items-center">
+          <MessageCircle size={20} className="mr-1" />
+          {itinerary._count.comments}
+        </button>
+        <button className="flex items-center">
+          <Share2 size={20} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default ItineraryCard;

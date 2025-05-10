@@ -1,6 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../middleware/auth";
 import { signin, signup, userDetails } from "../controllers/authController";
+import { follow } from "../controllers/followController";
 const userRouter = express.Router();
 
 
@@ -13,5 +14,8 @@ userRouter.post("/signin", signin);
 
 // get the logged in user details
 userRouter.get("/",authMiddleware, userDetails);
+
+// user can follow one another
+userRouter.post("/follow", authMiddleware, follow);
 
 export { userRouter };

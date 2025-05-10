@@ -28,7 +28,7 @@ postRouter.get("/categories", authMiddleware, CategoryController);
 // create a new post
 postRouter.post("/create", authMiddleware, upload.single('media'), createPost);
 
-// view for a post and update analytics
+// views for a post and update analytics
 postRouter.post("/post/:postId/view", authMiddleware, postView);
 
 // comment to a post

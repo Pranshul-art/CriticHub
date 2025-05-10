@@ -124,8 +124,8 @@ const SpecificCategory = () => {
 
         {/* Modal */}
         {isModalOpen && selectedPost && (
-          <div className="fixed inset-0  py-8 pt-20   bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-navy-800  overflow-y-scroll rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-[64%] p-6 relative max-h-screen">
+          <div className="fixed inset-0   pt-20   bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-navy-800   overflow-y-scroll rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-[64%] p-6 relative max-h-screen">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
                 onClick={closeModal}
