@@ -161,7 +161,7 @@ const SpecificCategory = () => {
                     <video
                       controls
                       src={selectedPost.uploadMedia}
-                      className="w-full rounded-lg"
+                      className="w-full rounded-lg max-h-screen bg-teal bg-opacity-10"
                     />
                   ) : (
                     <img

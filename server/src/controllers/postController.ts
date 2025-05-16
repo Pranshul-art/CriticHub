@@ -216,3 +216,53 @@ export const commentOnPost=async (req:Request, res:Response):Promise<void>=>{
         res.status(500).json({ success: false, message: 'Failed to add comment' });
       }
 }
+
+//get all comments logic
+export const GetAllComment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { postId } = req.params;
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!post) {
+      res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+      return;
+    }
+
+    // Fetch all comments for the post, include user info
+    const comments = await prisma.comment.findMany({
+      where: { postId },
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        comment: true, // <-- This ensures the comment text is included
+        createdAt: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            verified: true,
+            isCritic: true,
+            profileImage: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: comments,
+      message: 'Comments fetched successfully'
+    });
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch comments' });
+  }
+};

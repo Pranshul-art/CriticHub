@@ -43,7 +43,7 @@ const Itineraries = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-navy-900 text-gray-800 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-300 dark:bg-navy-900 text-gray-800 dark:text-gray-100">
       <div className="container mx-auto px-4 py-8 pt-20 w-11/12 md:w-3/4 lg:w-1/2">
         {loading ? (
           <p className="text-center text-lg">Loading itineraries...</p>

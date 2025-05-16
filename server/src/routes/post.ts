@@ -2,7 +2,7 @@ import express from "express";
 import { authMiddleware } from "../middleware/auth";
 import { category, featured, postView } from "../controllers/contentController";
 import multer from "multer";
-import { commentOnPost, createPost } from "../controllers/postController";
+import { commentOnPost, createPost, GetAllComment } from "../controllers/postController";
 import { CategoryController } from "../controllers/categoryController";
 
 const postRouter= express.Router();
@@ -22,6 +22,8 @@ postRouter.get("/featured", authMiddleware, featured);
 // category specific content 
 postRouter.get("/category/:categoryId", authMiddleware, category);
 
+
+
 //get all categories
 postRouter.get("/categories", authMiddleware, CategoryController);
 
@@ -32,7 +34,10 @@ postRouter.post("/create", authMiddleware, upload.single('media'), createPost);
 postRouter.post("/post/:postId/view", authMiddleware, postView);
 
 // comment to a post
-postRouter.post("/post/:postId/comments", authMiddleware, commentOnPost);
+postRouter.post("/:postId/comments", authMiddleware, commentOnPost);
+
+// get all comments
+postRouter.get("/:postId/comments", authMiddleware, GetAllComment);
 
 
 export { postRouter };

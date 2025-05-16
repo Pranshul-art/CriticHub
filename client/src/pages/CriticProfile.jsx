@@ -110,13 +110,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   const handleLogout = async () => {
     try {
       // You can replace this with your actual logout endpoint
-      await axios.post('http://localhost:8080/api/v1/auth/logout',{
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-      }
-      });
+      localStorage.removeItem("username")
+      localStorage.removeItem("token");
       // Redirect to login page or home page after logout
-      window.location.href = '/login';
+      window.location.href = '/';
     } catch (error) {
       console.error('Error logging out:', error);
     }
