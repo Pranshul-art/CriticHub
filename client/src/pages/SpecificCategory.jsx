@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const SpecificCategory = () => {
   const { categoryId } = useParams(); // Extract categoryId from the URL
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [categoryName, setCategoryName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
-  const [selectedPost, setSelectedPost] = useState(null); // State to track the selected post
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to track modal visibility
+  const [selectedPost, setSelectedPost] = useState(null); 
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const hasOpenedModalRef = useRef(false);
 
   const openModal = (post) => {
     setSelectedPost(post);
@@ -59,6 +61,28 @@ const SpecificCategory = () => {
 
     fetchCategoryContent();
   }, [categoryId, page]);
+
+  useEffect(() => {
+    hasOpenedModalRef.current = false; // Reset when posts are re-fetched
+  }, [categoryId, page]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const postIdToOpen = params.get("post");
+    if (
+      postIdToOpen &&
+      posts.length > 0 &&
+      !isModalOpen &&
+      !hasOpenedModalRef.current
+    ) {
+      const postToOpen = posts.find((p) => p.id === postIdToOpen);
+      if (postToOpen) {
+        openModal(postToOpen);
+        hasOpenedModalRef.current = true;
+      }
+    }
+    // eslint-disable-next-line
+  }, [location.search, posts, isModalOpen]);
 
   const handleNextPage = () => setPage((prev) => prev + 1);
   const handlePreviousPage = () => setPage((prev) => Math.max(prev - 1, 1));

@@ -11,7 +11,9 @@ const ItineraryCard = ({ itinerary, loggedInUserId }) => {
   const [showShare, setShowShare] = useState(false);
 
   const trunc = () => {
+    
     setFullContent(!fullContent);
+     
   };
 
   useEffect(() => {
@@ -39,7 +41,7 @@ const ItineraryCard = ({ itinerary, loggedInUserId }) => {
   };
 
   // Generate the post link (adjust as per your routing)
-  const postUrl = `${window.location.origin}/content/category/${itinerary.category.id}/post/${itinerary.id}`;
+  const postUrl = `${window.location.origin}/explore/category/${itinerary.category.id}?post=${itinerary.id}`;
 
   // 3-line clamp for description
   const getClampedDescription = (text) => {
@@ -56,6 +58,7 @@ const ItineraryCard = ({ itinerary, loggedInUserId }) => {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(postUrl);
+    e.stopPropagation();
     setShowShare(false);
   };
 
@@ -207,7 +210,10 @@ const ItineraryCard = ({ itinerary, loggedInUserId }) => {
                     Share
                   </span>
                   <button
-                    onClick={() => setShowShare(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowShare(false);
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <X size={18} />

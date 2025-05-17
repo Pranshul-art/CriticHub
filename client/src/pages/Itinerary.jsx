@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ItineraryCard from "../components2/itineraries/ItinerariesCard";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Corrected import
+import { jwtDecode } from "jwt-decode"; 
 
 const Itineraries = () => {
   const [itineraries, setItineraries] = useState([]);

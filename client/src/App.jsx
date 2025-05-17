@@ -10,7 +10,7 @@ const CriticProfile = lazy(() => import('./pages/CriticProfile'));
 const ItineraryBuilder = lazy(() => import('./pages/Itinerary'));
 const Explore = lazy(() => import('./pages/Explore'));
 const SignUp = lazy(()=> import('./pages/SignUp'));
-const Signin = lazy(()=> import('./pages/Signin'));
+const Signin = lazy(()=> import('./pages/SignIn'));
 const SpecificCategory = lazy(()=> import('./pages/SpecificCategory'));
 
 
