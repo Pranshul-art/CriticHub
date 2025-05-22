@@ -56,3 +56,46 @@ export const follow = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ success: false, message: "An error occurred while processing the request." });
   }
 };
+
+
+// get all followers logic 
+export const followers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(400).json({ success: false, message: "Missing user ID." });
+      return;
+    }
+
+    const followers = await prisma.follower.findMany({
+      where: { followingId: userId },
+      include: {
+        follower: {
+          select: {
+            id: true,
+            username: true,
+            profileImage: true,
+            tag: true,
+            isCritic: true,
+            verified: true,
+          },
+        },
+      },
+    });
+
+    // Map to flatten the structure for frontend
+    const formatted = followers.map(f => ({
+      id: f.follower.id,
+      username: f.follower.username,
+      profileImage: f.follower.profileImage,
+      tag: f.follower.tag,
+      isCritic: f.follower.isCritic,
+      isVerified: f.follower.verified,
+    }));
+
+    res.json({ success: true, data: formatted });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch followers" });
+  }
+};

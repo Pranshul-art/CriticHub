@@ -5,159 +5,120 @@ const prisma = new PrismaClient();
 
 //featured content - latest, recent and trending logic
 
-interface QueryParams{
-    type?: string,
-    limit?: string
+interface QueryParams {
+  type?: string,
+  limit?: string,
+  page?: string
 }
+
 export const featured = async (req: Request<any, any, any, QueryParams>, res: Response): Promise<void> => {
   try {
-    const { type = 'all', limit = "10" } = req.query;
+    const { type = 'all', limit = "10", page = "1" } = req.query;
     const parsedLimit = parseInt(limit);
-    const currentUserId: string | undefined = req.userId; // Assuming `req.user` contains the logged-in user's details
+    const parsedPage = parseInt(page);
+    const skip = (parsedPage - 1) * parsedLimit;
+    const currentUserId: string | undefined = req.userId;
 
-    let posts: Array<{
-      id: string;
-      title: string;
-      content: string;
-      postDate: Date;
-      user: {
-        id: string;
-        username: string;
-        tag: string;
-        profileImage: string | null;
-        isCritic: boolean;
-        isFollowed: boolean; // New field to indicate if the user is followed
-      };
-      category: {
-        id: string;
-        name: string;
-      } | null;
-      _count: {
-        views: number;
-        comments: number;
-      };
-    }> = [];
-
-    const now = new Date();
-    const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
-
-    // For combined featured content
     if (type === 'all') {
-      // Get latest posts
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      // Fetch more than needed from each category to ensure enough after deduplication
+      const fetchCount = parsedLimit * 3;
+
+      // Latest
       const latestPosts = await prisma.post.findMany({
-        take: Math.floor(parsedLimit / 3),
         orderBy: { postDate: 'desc' },
+        take: fetchCount,
         include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              tag: true,
-              profileImage: true,
-              isCritic: true,
-            },
-          },
+          user: { select: { id: true, username: true, tag: true, profileImage: true, isCritic: true } },
           category: true,
-          _count: {
-            select: {
-              views: true,
-              comments: true,
-            },
-          },
+          _count: { select: { views: true, comments: true } },
         },
       });
 
-      // Get trending posts (most views in last 7 days)
+      // Trending (most views in last 7 days)
       const trendingPostIds = await prisma.view.groupBy({
         by: ['postId'],
-        where: {
-          timestamp: { gte: oneWeekAgo },
-        },
-        _count: {
-          postId: true,
-        },
-        orderBy: {
-          _count: {
-            postId: 'desc',
-          },
-        },
-        take: Math.floor(parsedLimit / 3),
+        where: { timestamp: { gte: oneWeekAgo } },
+        _count: { postId: true },
+        orderBy: { _count: { postId: 'desc' } },
+        take: fetchCount,
       });
-
       const trendingPosts = await prisma.post.findMany({
-        where: {
-          id: { in: trendingPostIds.map((p) => p.postId) },
-        },
+        where: { id: { in: trendingPostIds.map((p) => p.postId) } },
         include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              tag: true,
-              profileImage: true,
-              isCritic: true,
-            },
-          },
+          user: { select: { id: true, username: true, tag: true, profileImage: true, isCritic: true } },
           category: true,
-          _count: {
-            select: {
-              views: true,
-              comments: true,
-            },
-          },
+          _count: { select: { views: true, comments: true } },
         },
       });
 
-      // Get posts from critics
+      // Critics
       const criticPosts = await prisma.post.findMany({
-        where: {
-          user: {
-            isCritic: true,
-          },
-        },
-        take: Math.floor(parsedLimit / 3),
+        where: { user: { isCritic: true } },
         orderBy: { postDate: 'desc' },
+        take: fetchCount,
         include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              tag: true,
-              profileImage: true,
-              isCritic: true,
-            },
-          },
+          user: { select: { id: true, username: true, tag: true, profileImage: true, isCritic: true } },
           category: true,
-          _count: {
-            select: {
-              views: true,
-              comments: true,
-            },
-          },
+          _count: { select: { views: true, comments: true } },
         },
       });
 
-      // Combine all types and remove duplicates
+      // Combine and deduplicate
       const allPosts = [...latestPosts, ...trendingPosts, ...criticPosts];
-      const uniquePostIds = new Set();
+      const uniquePostsMap = new Map();
+      allPosts.forEach(post => {
+        if (!uniquePostsMap.has(post.id)) uniquePostsMap.set(post.id, post);
+      });
+      const uniquePosts = Array.from(uniquePostsMap.values());
 
-      posts = allPosts
-        .filter((post) => {
-          if (uniquePostIds.has(post.id)) return false;
-          uniquePostIds.add(post.id);
-          return true;
-        })
-        .map((post) => ({
+      // Pagination
+      const paginatedPosts = uniquePosts.slice(skip, skip + parsedLimit);
+
+      // Total count for pagination
+      const totalPosts = uniquePosts.length;
+
+      // Add isFollowed
+      let postsWithFollow = paginatedPosts;
+      if (currentUserId) {
+        const followedUsers = await prisma.follower.findMany({
+          where: {
+            followerId: currentUserId,
+            followingId: { in: paginatedPosts.map((post) => post.user.id) },
+          },
+          select: { followingId: true },
+        });
+        const followedUserIds = new Set(followedUsers.map(f => f.followingId));
+        postsWithFollow = paginatedPosts.map(post => ({
           ...post,
           user: {
             ...post.user,
-            isFollowed: false, // Default value, will be updated later if needed
+            isFollowed: post.user.id !== currentUserId && followedUserIds.has(post.user.id),
           },
-        }))
-        .slice(0, parsedLimit);
+        }));
+      } else {
+        postsWithFollow = paginatedPosts.map(post => ({
+          ...post,
+          user: { ...post.user, isFollowed: false },
+        }));
+      }
+
+      res.json({
+        success: true,
+        data: postsWithFollow,
+        pagination: {
+          page: parsedPage,
+          limit: parsedLimit,
+          totalItems: totalPosts,
+          totalPages: Math.ceil(totalPosts / parsedLimit),
+        },
+      });
+      return;
     } else if (type === 'latest') {
       // Get only latest posts
-      posts = (await prisma.post.findMany({
+      let posts = (await prisma.post.findMany({
         take: parsedLimit,
         orderBy: { postDate: 'desc' },
         include: {
@@ -185,8 +146,17 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
           isFollowed: false, // Default value for isFollowed
         },
       }));
+
+      res.json({
+        success: true,
+        data: posts,
+        // add pagination if needed
+      });
+      return;
     } else if (type === 'trending') {
       // Get only trending posts
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const trendingPostIds = await prisma.view.groupBy({
         by: ['postId'],
         where: {
@@ -203,7 +173,7 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
         take: parsedLimit,
       });
 
-      posts = (await prisma.post.findMany({
+      let posts = (await prisma.post.findMany({
         where: {
           id: { in: trendingPostIds.map((p) => p.postId) },
         },
@@ -232,9 +202,19 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
           isFollowed: false, // Default value for isFollowed
         },
       }));
+
+      res.json({
+        success: true,
+        data: posts,
+        // add pagination if needed
+      });
+      return;
     }
 
     // Add "isFollowed" field for each post's user
+    let posts: any[] = [];
+    // posts will only be used if type is not 'all', 'latest', or 'trending'
+    // so we need to ensure it's defined to avoid TS error
     if (currentUserId) {
       const followedUsers = await prisma.follower.findMany({
         where: {
@@ -270,8 +250,12 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
       data: posts,
     });
   } catch (error) {
-    console.error('Error fetching featured content:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch featured content' });
+    // Only send a response if one hasn't been sent yet!
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Error fetching featured content" });
+    }
+    // Optionally log the error
+    console.error("Error fetching featured content:", error);
   }
 };
 

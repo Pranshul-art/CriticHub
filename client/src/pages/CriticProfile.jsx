@@ -6,6 +6,7 @@ import {
 import axios from 'axios';
 
 import QuickNavigation from '../components2/QuickNavigation';
+import Followers from "../components2/criticsProfile/Followers";
 
 // Dummy data for analytics
 const analyticsSummary = {
@@ -697,6 +698,8 @@ export default function CriticDashboard() {
         return <CreatePostTab />;
       case 'analytics':
         return <AnalyticsTab />;
+      case "followers":
+        return <Followers />;
       default:
         return (
           <div className="h-full flex items-center justify-center">
@@ -713,10 +716,10 @@ export default function CriticDashboard() {
   };
   
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 ">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 mt-20 overflow-auto p-6">
         {renderActiveTab()}
       </div>
     </div>

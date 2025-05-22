@@ -1,7 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../middleware/auth";
 import { signin, signup, userDetails } from "../controllers/authController";
-import { follow } from "../controllers/followController";
+import { follow, followers } from "../controllers/followController";
 const userRouter = express.Router();
 
 
@@ -18,4 +18,6 @@ userRouter.get("/",authMiddleware, userDetails);
 // user can follow one another
 userRouter.post("/follow", authMiddleware, follow);
 
+// get all followers
+userRouter.get("/followers", authMiddleware, followers)
 export { userRouter };
