@@ -166,7 +166,7 @@ flowchart LR
 ### HLD image placeholder
 Place a high-quality, annotated HLD image at `./client/src/assets/CriticsHubSystemDesign.png`. The README references this file:
 
-![High-Level Design - placeholder](./docs/hld.png)
+![High-Level Design - placeholder](./client/src/assets/CriticsHubSystemDesign.png)
 
 ---
 
