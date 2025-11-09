@@ -293,7 +293,7 @@ Concise pitch:
 ---
 
 ## Contact
-Project owner: Pranshul Gupta 
+Project owner: Pranshul Gupta. 
 Local repo path: `https://github.com/Pranshul-art/CriticHub.git`
 
 ---
