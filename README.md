@@ -2,8 +2,6 @@
 
 CriticsHub is a social platform for critics and travelers to publish reviews, share itineraries, and track engagement. This repository contains a React frontend and an Express + Prisma backend with media uploads, analytics, and user profile features.
 
-> Professional README with architecture diagram (Mermaid), setup, and key design notes suitable for documentation and interview talks.
-
 ---
 
 ## Table of Contents
@@ -164,8 +162,6 @@ flowchart LR
 ```
 
 ### HLD image placeholder
-Place a high-quality, annotated HLD image at `./client/src/assets/CriticsHubSystemDesign.png`. The README references this file:
-
 ![High-Level Design - placeholder](./client/src/assets/CriticsHubSystemDesign.png)
 
 ---
@@ -190,7 +186,7 @@ Place a high-quality, annotated HLD image at `./client/src/assets/CriticsHubSyst
 ---
 
 ## Environment variables
-Create `/server/.env` with (minimum):
+Create `/server/.env`:
 
 ```text
 DATABASE_URL=postgresql://user:pass@host:port/dbname
@@ -205,8 +201,6 @@ CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 STAGING_STORAGE=local|s3
 ```
-
-> Do not commit `.env`.
 
 ---
 
@@ -294,12 +288,12 @@ Concise pitch:
 
 ## Contributing & License
 - Contributions welcome — open a PR with tests and description.
-- License: MIT (add `LICENSE` file if required).
+- License: MIT.
 
 ---
 
 ## Contact
-Project owner: prans  
-Local repo path: `c:\Users\prans\myprojects\touristGuide`
+Project owner: Pranshul Gupta 
+Local repo path: `https://github.com/Pranshul-art/CriticHub.git`
 
 ---
