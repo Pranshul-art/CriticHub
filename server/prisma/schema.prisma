@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -22,11 +22,17 @@ model User {
   isCritic     Boolean    @default(false)
   profileImage String?
   updatedAt    DateTime   @updatedAt
+  otp          String?
+  otpExpiresAt DateTime?
   comments     Comment[]
   followers    Follower[] @relation("UserFollowers")
   following    Follower[] @relation("UserFollowing")
   posts        Post[]
   views        View[]
+  likes        Like[]
+  saved        Saved[]
+  achievements UserAchievement[]
+   settings    UserSettings?
 }
 
 model Category {
@@ -45,16 +51,20 @@ model Post {
   title       String
   content     String
   location    String?
-  duration    String
+  duration    Int?
   uploadMedia String
   categoryId  String
-  postDate    DateTime  @default(now())
+  published   Boolean  @default(false)
+  scheduledAt DateTime?
+  createdAt    DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   tags        String[]
   comments    Comment[]
   category    Category  @relation(fields: [categoryId], references: [id])
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   views       View[]
+  likes       Like[]
+  saved       Saved[]
 }
 
 model View {
@@ -106,4 +116,57 @@ model GenderAnalytics {
   gender     String
   viewCount  Int      @default(0)
   date       DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Saved {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // Prevents duplicate saves
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?      // Link to badge image
+  createdAt   DateTime @default(now())
+  users       UserAchievement[]
+}
+
+model UserAchievement {
+  id             String   @id @default(uuid())
+  userId         String
+  achievementId  String
+  awardedAt      DateTime @default(now())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement    Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+model UserSettings {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  isProfilePublic     Boolean  @default(true)
+  allowMessages       Boolean  @default(true)
+  emailNotifications  Boolean  @default(true)
+  marketingEmails     Boolean  @default(false)
+  theme               String   @default("system") // "light", "dark", "system"
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

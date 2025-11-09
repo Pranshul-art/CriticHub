@@ -4,16 +4,16 @@ import axios from "axios";
 import CommentSection from "./CommentSection";
 
 const ItineraryCard = ({ itinerary, loggedInUserId }) => {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(itinerary.isLiked || false);
   const [fullContent, setFullContent] = useState(false);
   const [isFollowing, setIsFollowing] = useState(itinerary.user.isFollowed);
   const [showComments, setShowComments] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [likeCount, setLikeCount] = useState(itinerary._count.likes || 0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   const trunc = () => {
-    
     setFullContent(!fullContent);
-     
   };
 
   useEffect(() => {
@@ -31,12 +31,43 @@ const ItineraryCard = ({ itinerary, loggedInUserId }) => {
           },
         }
       );
-
       if (response.data.success) {
         setIsFollowing(!isFollowing);
       }
     } catch (error) {
-      console.error("Error toggling follow state:", error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        alert(error.response.data.message); // Or setError(error.response.data.message)
+      } else {
+        console.error("Error toggling follow state:", error);
+      }
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    if (likeLoading) return;
+    setLikeLoading(true);
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/v1/content/${itinerary.id}/like`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        setLiked(response.data.liked);
+        setLikeCount((prev) => prev + (response.data.liked ? 1 : -1));
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    } finally {
+      setLikeLoading(false);
     }
   };
 
@@ -185,10 +216,11 @@ const ItineraryCard = ({ itinerary, loggedInUserId }) => {
         <div className="flex items-center justify-between text-gray-500 border-t pt-3">
           <button
             className={`flex items-center ${liked ? "text-red-500" : ""}`}
-            onClick={() => setLiked(!liked)}
+            onClick={handleLikeToggle}
+            disabled={likeLoading}
           >
             <Heart size={20} className={`mr-1 ${liked ? "fill-current" : ""}`} />
-            {itinerary._count.views + (liked ? 1 : 0)}
+            {likeCount}
           </button>
           <button
             className="flex items-center"

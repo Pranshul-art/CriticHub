@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   BarChart2, Image, Video, FileText, Send, TrendingUp, Users, Calendar, 
-  Award, Settings, LogOut, ChevronDown, MapPin, Clock, Upload, X, Plus
+  Award, Settings, LogOut, ChevronDown, MapPin, Clock, Upload, X, Plus, Save, Loader2, Edit, Camera
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -282,7 +282,7 @@ const CreatePostTab = () => {
       formData.append('title', postTitle);
       formData.append('content', postContent);
       if (location) formData.append('location', location);
-      formData.append('duration', duration);
+      formData.append('duration', Number(duration));
       formData.append('categoryId', categoryId);
       
       // Add tags
@@ -321,7 +321,7 @@ const CreatePostTab = () => {
   };
   
   return (
-    <div className="mt-20 p-6 bg-gray-50 rounded-lg">
+    <div className="mt-1 p-6 bg-gray-50 rounded-lg">
       <h2 className="text-2xl font-bold mb-6">Create New Itinerary</h2>
       
       {errorMessage && (
@@ -364,14 +364,15 @@ const CreatePostTab = () => {
           </div>
           
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Duration *</label>
+            <label className="block text-gray-700 font-medium mb-2">Duration (in hours) *</label>
             <div className="relative">
               <input
-                type="text"
+                type="number"
+                min="1"
                 className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral"
-                placeholder="E.g., 2 days, 5 hours"
+                placeholder="E.g., 2"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={(e) => setDuration(e.target.value.replace(/[^0-9]/g, ""))}
               />
               <Clock size={18} className="absolute left-3 top-3.5 text-gray-400" />
             </div>
@@ -519,121 +520,207 @@ export { CreatePostTab };
 
 
 const AnalyticsTab = () => {
-  const [timeRange, setTimeRange] = useState('7days');
-  
+  const [timeRange, setTimeRange] = useState('7');
+  const [totals, setTotals] = useState({
+    totalPosts: 0,
+    totalLikes: 0,
+    totalFollowers: 0,
+    postsGrowth: 0,
+    likesGrowth: 0,
+    followersGrowth: 0,
+  });
+  const [demographics, setDemographics] = useState({
+    age: { '18-24': 0, '25-34': 0, '35-44': 0, '45+': 0 },
+    gender: { male: 0, female: 0, other: 0 }
+  });
+  const [engagement, setEngagement] = useState([
+    { name: 'Sunday', likes: 0, comments: 0 },
+    { name: 'Monday', likes: 0, comments: 0 },
+    { name: 'Tuesday', likes: 0, comments: 0 },
+    { name: 'Wednesday', likes: 0, comments: 0 },
+    { name: 'Thursday', likes: 0, comments: 0 },
+    { name: 'Friday', likes: 0, comments: 0 },
+    { name: 'Saturday', likes: 0, comments: 0 },
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      try {
+        // Fetch totals
+        const totalsRes = await axios.get('http://localhost:8080/api/v1/analytics/totals', {
+          params: {
+            // userId: localStorage.getItem("userId"),
+            days: timeRange
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (totalsRes.data && totalsRes.data.success) {
+          setTotals(totalsRes.data.data);
+        }
+        // Fetch demographics
+        const demoRes = await axios.get('http://localhost:8080/api/v1/analytics/demographics', {
+          params: {
+            // userId: localStorage.getItem("userId"),
+            days: timeRange
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (demoRes.data && demoRes.data.success) {
+          setDemographics(demoRes.data.data);
+        }
+        // Fetch engagement (daily interactions)
+        const engagementRes = await axios.get('http://localhost:8080/api/v1/analytics/daily-interactions', {
+          params: {
+            // userId: localStorage.getItem("userId"),
+            weeks: Math.ceil(Number(timeRange) / 7)
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (engagementRes.data && engagementRes.data.success) {
+          // Convert backend object to array for chart
+          const daysOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const engagementArr = daysOrder.map(day => ({
+            name: day,
+            likes: engagementRes.data.data[day]?.likes || 0,
+            comments: engagementRes.data.data[day]?.comments || 0,
+          }));
+          setEngagement(engagementArr);
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+      setLoading(false);
+    };
+    fetchAnalytics();
+  }, [timeRange]);
+
   return (
     <div className="p-6 mt-20 bg-gray-50 rounded-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Content Analytics</h2>
-        
         <div className="relative">
-          <select 
+          <select
             className="appearance-none bg-white border border-gray-300 px-4 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral"
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
           >
-            <option value="7days">Last 7 Days</option>
-            <option value="30days">Last 30 Days</option>
-            <option value="3months">Last 3 Months</option>
-            <option value="year">Last Year</option>
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 3 Months</option>
+            <option value="365">Last Year</option>
           </select>
           <ChevronDown size={18} className="absolute right-3 top-2.5 text-gray-500 pointer-events-none" />
         </div>
       </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          { label: 'Total Posts', value: analyticsSummary.totalPosts, icon: FileText, color: 'bg-blue-100 text-blue-600' },
-          { label: 'Total Views', value: analyticsSummary.totalViews.toLocaleString(), icon: BarChart2, color: 'bg-purple-100 text-purple-600' },
-          { label: 'Total Likes', value: analyticsSummary.totalLikes.toLocaleString(), icon: TrendingUp, color: 'bg-coral-100 text-coral' },
-          { label: 'Followers', value: analyticsSummary.followersCount.toLocaleString(), growth: analyticsSummary.growthRate, icon: Users, color: 'bg-green-100 text-green-600' },
-        ].map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-md">
-            <div className={`w-12 h-12 rounded-full ${stat.color} flex items-center justify-center mb-4`}>
-              <stat.icon size={24} />
+        {loading ? (
+          <div className="col-span-4 text-center">Loading...</div>
+        ) : (
+          [
+            {
+              label: 'Total Posts',
+              value: totals.totalPosts,
+              growth: totals.postsGrowth,
+              icon: FileText,
+              color: 'bg-blue-100 text-blue-600',
+            },
+            {
+              label: 'Total Likes',
+              value: totals.totalLikes,
+              growth: totals.likesGrowth,
+              icon: TrendingUp,
+              color: 'bg-light-cream text-coral-500',
+            },
+            {
+              label: 'Followers',
+              value: totals.totalFollowers,
+              growth: totals.followersGrowth,
+              icon: Users,
+              color: 'bg-green-100 text-green-600',
+            },
+          ].map((stat, index) => (
+            <div key={index} className="bg-white p-6 rounded-lg shadow-md">
+              <div className={`w-12 h-12 rounded-full ${stat.color} flex items-center justify-center mb-4`}>
+                <stat.icon size={24} />
+              </div>
+              <h3 className="text-lg font-medium text-gray-500">{stat.label}</h3>
+              <div className="flex items-end">
+                <span className="text-2xl font-bold mr-2">{stat.value}</span>
+                <span className={`text-sm font-medium ${stat.growth > 0 ? "text-green-600" : stat.growth < 0 ? "text-red-600" : "text-gray-500"}`}>
+                  {stat.growth > 0 ? `+${stat.growth}` : stat.growth}
+                  {stat.growth !== 0 && ` in last ${timeRange === "7" ? "week" : timeRange === "30" ? "month" : timeRange === "90" ? "3 months" : "year"}`}
+                </span>
+              </div>
             </div>
-            <h3 className="text-lg font-medium text-gray-500">{stat.label}</h3>
-            <div className="flex items-end">
-              <span className="text-2xl font-bold mr-2">{stat.value}</span>
-              {stat.growth && (
-                <span className="text-green-600 text-sm font-medium">{stat.growth}</span>
-              )}
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md lg:col-span-2">
           <h3 className="text-lg font-medium mb-4">Engagement Over Time</h3>
           <div className="h-64">
-            {/* In a real implementation, this would be a chart component */}
+            {/* Likes and Comments Bar Chart */}
             <div className="h-full flex items-end">
-              {engagementData.map((data, i) => (
+              {engagement.map((data, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                  <div 
-                    className="w-8 bg-coral rounded-t-md transition-all hover:bg-coral-dark" 
-                    style={{height: `${data.value}%`}}
+                  <div
+                    className="w-8 bg-coral rounded-t-md transition-all hover:bg-coral-dark mb-1"
+                    style={{ height: `${Math.min(data.likes, 120)}px` }}
+                    title={`Likes: ${data.likes}`}
                   ></div>
-                  <span className="text-xs text-gray-600 mt-2">{data.name}</span>
+                  <div
+                    className="w-8 bg-blue-300 rounded-t-md transition-all hover:bg-blue-400"
+                    style={{ height: `${Math.min(data.comments, 120)}px` }}
+                    title={`Comments: ${data.comments}`}
+                  ></div>
+                  <span className="text-xs text-gray-600 mt-2">{data.name.slice(0, 3)}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-lg font-medium mb-4">Audience Demographics</h3>
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1 text-sm">
-                <span>Age 18-24</span>
-                <span>35%</span>
+            {/* Age Groups */}
+            {Object.entries(demographics.age).map(([age, percent]) => (
+              <div key={age}>
+                <div className="flex justify-between mb-1 text-sm">
+                  <span>Age {age}</span>
+                  <span>{Math.round(percent * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-coral h-2 rounded-full" style={{ width: `${Math.round(percent * 100)}%` }}></div>
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-coral h-2 rounded-full" style={{width: '35%'}}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1 text-sm">
-                <span>Age 25-34</span>
-                <span>45%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-coral h-2 rounded-full" style={{width: '45%'}}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1 text-sm">
-                <span>Age 35-44</span>
-                <span>15%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-coral h-2 rounded-full" style={{width: '15%'}}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1 text-sm">
-                <span>Age 45+</span>
-                <span>5%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-coral h-2 rounded-full" style={{width: '5%'}}></div>
-              </div>
-            </div>
-            
+            ))}
+            {/* Gender */}
             <div className="border-t pt-4 mt-4">
               <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium">Gender</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-center">
                 <div className="p-2 rounded bg-gray-100">
-                  <div className="text-lg font-bold">58%</div>
+                  <div className="text-lg font-bold">{Math.round(demographics.gender.female * 100)}%</div>
                   <div className="text-xs text-gray-500">Female</div>
                 </div>
                 <div className="p-2 rounded bg-gray-100">
-                  <div className="text-lg font-bold">42%</div>
+                  <div className="text-lg font-bold">{Math.round(demographics.gender.male * 100)}%</div>
                   <div className="text-xs text-gray-500">Male</div>
+                </div>
+                <div className="p-2 rounded bg-gray-100 col-span-2">
+                  <div className="text-lg font-bold">{Math.round(demographics.gender.other * 100)}%</div>
+                  <div className="text-xs text-gray-500">Other</div>
                 </div>
               </div>
             </div>
@@ -689,6 +776,295 @@ const AnalyticsTab = () => {
   );
 };
 
+const SettingsTab = () => {
+  const [profile, setProfile] = useState({
+    username: '',
+    tag: '',
+    age: '',
+    gender: '',
+    bio: '',
+    profileImage: '',
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [previewImage, setPreviewImage] = useState('');
+  const [typedUsername, setTypedUsername] = useState('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      try {
+        const res = await axios.get('http://localhost:8080/api/v1/user/profile', {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        if (res.data && res.data.success) {
+          setProfile({
+            username: res.data.data.username || '',
+            tag: res.data.data.tag || '',
+            age: res.data.data.age || '',
+            gender: res.data.data.gender || '',
+            bio: res.data.data.bio || '',
+            profileImage: res.data.data.profileImage || '',
+          });
+          setPreviewImage(res.data.data.profileImage || '');
+        }
+      } catch (err) {
+        setError('Failed to load profile info.');
+      }
+      setIsLoading(false);
+    };
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!editing && profile.username) {
+      setTypedUsername('');
+      let i = 0;
+      const interval = setInterval(() => {
+        setTypedUsername(profile.username.slice(0, i + 1));
+        i++;
+        if (i === profile.username.length) clearInterval(interval);
+      }, 90); // Adjust speed as needed
+      return () => clearInterval(interval);
+    }
+  }, [profile.username, editing]);
+
+  const handleChange = (e) => {
+    setProfile({ ...profile, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPreviewImage(URL.createObjectURL(file));
+    setProfile((prev) => ({ ...prev, profileImage: file }));
+  };
+
+  const handleEdit = () => {
+    setEditing(true);
+    setSuccess('');
+    setError('');
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+    setSuccess('');
+    setError('');
+    setPreviewImage(profile.profileImage || '');
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      let imageUrl = profile.profileImage;
+      // If a new image file is selected, upload it
+      if (profile.profileImage instanceof File) {
+        const formData = new FormData();
+        formData.append('profileImage', profile.profileImage);
+        const imgRes = await axios.put('http://localhost:8080/api/v1/user/profile', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+        if (imgRes.data && imgRes.data.success) {
+          imageUrl = imgRes.data.data?.profileImage || imageUrl;
+        }
+      }
+      // Update other fields
+      const res = await axios.put('http://localhost:8080/api/v1/user/profile', {
+        username: profile.username,
+        tag: profile.tag,
+        age: profile.age,
+        gender: profile.gender,
+        bio: profile.bio,
+        profileImage: imageUrl,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (res.data && res.data.success) {
+        setSuccess('Profile updated!');
+        setEditing(false);
+        setProfile((prev) => ({
+          ...prev,
+          profileImage: imageUrl,
+        }));
+      } else {
+        setError('Failed to update profile.');
+      }
+    } catch {
+      setError('Failed to update profile.');
+    }
+    setSaving(false);
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-10 text-navy-700 dark:text-cream">Loading...</div>;
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto mt-10">
+      <div className="relative  bg-gradient-to-r from-coral to-pink-400 rounded-3xl shadow-xl overflow-visible mb-8">
+        {/* Cover image effect */}
+        <div className="overflow-visible h-32 w-full bg-gradient-to-r from-coral to-pink-400 relative flex items-center justify-center">
+          <svg
+            className="handwriting-svg"
+            width="100%"
+            height="200"
+            viewBox="0 0 600 80"
+            style={{ maxWidth: '95%' }}
+          >
+            <text
+              x="45%"
+              y="60"
+              textAnchor="middle"
+              style={{
+                fontFamily: "'Mrs Saint Delafield', cursive",
+                fontSize: "9rem",
+                fill: "none",
+                stroke: "white",
+                strokeWidth: 2,
+              }}
+            >
+              {profile.username}
+            </text>
+          </svg>
+        </div>
+        {/* Avatar */}
+        <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2 z-20">
+          <div className="relative">
+            <img
+              src={previewImage || '/default-avatar.png'}
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover bg-white"
+            />
+            {editing && (
+              <label className="absolute bottom-2 right-2 bg-coral p-2 rounded-full cursor-pointer shadow-lg hover:bg-coral-dark transition-colors z-30">
+                <Camera size={18} className="text-white" />
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </label>
+            )}
+          </div>
+        </div>
+        {/* Edit button */}
+        {!editing && (
+          <button
+            onClick={handleEdit}
+            className="absolute top-4 right-4 bg-white text-coral px-4 py-2 rounded-lg shadow hover:bg-coral hover:text-white transition-colors flex items-center z-30"
+          >
+            <Edit size={18} className="mr-2" /> Edit
+          </button>
+        )}
+        {/* Add extra space below for avatar */}
+        <div className="h-20"></div>
+      </div>
+
+      <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-lg pt-20 pb-10 px-8">
+        {success && <div className="bg-green-100 text-green-700 px-4 py-2 rounded mb-4">{success}</div>}
+        {error && <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">{error}</div>}
+
+        <form onSubmit={handleSave}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <label className="block text-gray-700 dark:text-cream font-medium mb-1">Username</label>
+              <input
+                type="text"
+                name="username"
+                value={profile.username}
+                onChange={handleChange}
+                disabled={!editing}
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral bg-gray-50 dark:bg-navy-800 dark:border-navy-700 dark:text-cream ${!editing ? 'cursor-default' : ''}`}
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 dark:text-cream font-medium mb-1">Tag</label>
+              <input
+                type="text"
+                name="tag"
+                value={profile.tag}
+                onChange={handleChange}
+                disabled={!editing}
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral bg-gray-50 dark:bg-navy-800 dark:border-navy-700 dark:text-cream ${!editing ? 'cursor-default' : ''}`}
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 dark:text-cream font-medium mb-1">Age</label>
+              <input
+                type="number"
+                name="age"
+                value={profile.age}
+                onChange={handleChange}
+                disabled={!editing}
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral bg-gray-50 dark:bg-navy-800 dark:border-navy-700 dark:text-cream ${!editing ? 'cursor-default' : ''}`}
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 dark:text-cream font-medium mb-1">Gender</label>
+              <select
+                name="gender"
+                value={profile.gender}
+                onChange={handleChange}
+                disabled={!editing}
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral bg-gray-50 dark:bg-navy-800 dark:border-navy-700 dark:text-cream ${!editing ? 'cursor-default' : ''}`}
+              >
+                <option value="">Select</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-8">
+            <label className="block text-gray-700 dark:text-cream font-medium mb-1">Bio</label>
+            <textarea
+              name="bio"
+              value={profile.bio}
+              onChange={handleChange}
+              disabled={!editing}
+              className={`w-full p-3 border border-gray-300 rounded-lg h-24 focus:outline-none focus:ring-2 focus:ring-coral bg-gray-50 dark:bg-navy-800 dark:border-navy-700 dark:text-cream ${!editing ? 'cursor-default' : ''}`}
+              placeholder="Share your story, your passion, or your favorite travel quote!"
+            />
+          </div>
+          {editing && (
+            <div className="flex gap-4 justify-end mt-8">
+              <button
+                type="submit"
+                className="bg-coral text-white px-6 py-2 rounded-lg flex items-center hover:bg-coral-dark transition-colors shadow"
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="animate-spin mr-2" size={18} /> : <Save className="mr-2" size={18} />}
+                Save
+              </button>
+              <button
+                type="button"
+                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg flex items-center hover:bg-gray-300 transition-colors shadow"
+                onClick={handleCancel}
+                disabled={saving}
+              >
+                <X className="mr-2" size={18} /> Cancel
+              </button>
+            </div>
+          )}
+        </form>
+        {/* Bio as a quote */}
+        {!editing && profile.bio && (
+          <div className="mt-10 text-center">
+            <blockquote className="italic text-coral text-lg border-l-4 border-coral-400 pl-4">
+              “{profile.bio}”
+            </blockquote>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function CriticDashboard() {
   const [activeTab, setActiveTab] = useState('create');
   
@@ -700,15 +1076,14 @@ export default function CriticDashboard() {
         return <AnalyticsTab />;
       case "followers":
         return <Followers />;
+      case "settings":
+        return <SettingsTab />;
       default:
         return (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <h3 className="text-xl font-medium text-gray-700 mb-2">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h3>
               <p className="text-gray-500">This section is under development</p>
-              
-              
-              
             </div>
           </div>
         );
@@ -716,7 +1091,7 @@ export default function CriticDashboard() {
   };
   
   return (
-    <div className="flex h-screen bg-gray-100 ">
+    <div className="flex h-screen bg-purple-300 ">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <div className="flex-1 mt-20 overflow-auto p-6">

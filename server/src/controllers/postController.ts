@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from "@prisma/client";
 import multer from "multer";
 import  cloudinary  from "../utils/cloudinary";
 const prisma = new PrismaClient();
@@ -11,7 +11,7 @@ interface postContent{
     title: string,
     content: string,
     location?: string,
-    duration: string,
+    duration: Number,
     categoryId: string,
     tags: string | Array<string>,
 }
@@ -38,7 +38,7 @@ export const createPost = async(req:Request, res:Response):Promise<void>=>{
         }
     
         // Validate required fields
-        if (!title || !content || !duration || !categoryId) {
+        if (!title || !content || !categoryId) {
            res.status(400).json({ 
             success: false, 
             message: 'Missing required fields' 
@@ -80,16 +80,21 @@ export const createPost = async(req:Request, res:Response):Promise<void>=>{
             const parsedTags = Array.isArray(tags) ? tags : 
                               (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : []);
             
+            const createdAt = new Date();
+            const scheduledAt = duration ? new Date(createdAt.getTime() + Number(duration) * 60 * 60 * 1000) : null;
+
             const post = await prisma.post.create({
               data: {
                 title,
                 content,
                 location: location || null,
-                duration,
+                duration: Number(duration) || null,
                 categoryId,
                 tags: Array.isArray(parsedTags) ? parsedTags : [],
                 uploadMedia,
-                userId
+                userId,
+                createdAt,
+                scheduledAt
               }
             });
           
@@ -115,16 +120,21 @@ export const createPost = async(req:Request, res:Response):Promise<void>=>{
           const parsedTags = Array.isArray(tags) ? tags : 
                             (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : []);
           
+          const createdAt = new Date();
+          const scheduledAt = duration ? new Date(createdAt.getTime() + Number(duration) * 60 * 60 * 1000) : null;
+
           const post = await prisma.post.create({
             data: {
               title,
               content,
               location: location || null,
-              duration,
+              duration : duration ? Number(duration) : null,
               categoryId,
               tags: parsedTags,
               uploadMedia: '',
-              userId
+              userId,
+              createdAt,
+              scheduledAt
             }
           });
         
@@ -151,6 +161,43 @@ export const createPost = async(req:Request, res:Response):Promise<void>=>{
         res.status(500).json({ success: false, message: 'Failed to create post' });
       }
 }
+
+//schedule post logic
+export const schedulePost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { title, content, scheduledAt, duration, categoryId, tags } = req.body;
+    const userId = req.userId as string;
+
+    if (!userId) {
+      res.status(400).json({ success: false, message: 'User ID is required' });
+      return;
+    }
+    if (!categoryId) {
+      res.status(400).json({ success: false, message: 'Category ID is required' });
+      return;
+    }
+
+    const parsedTags = Array.isArray(tags) ? tags : 
+                      (typeof tags === 'string' ? tags.split(',').map((tag: string) => tag.trim()) : []);
+
+    const post = await prisma.post.create({
+      data: {
+        title,
+        content,
+        scheduledAt: new Date(scheduledAt),
+        duration: Number(duration),
+        published: false, // Not published yet
+        userId,
+        categoryId,
+        tags: parsedTags,
+        uploadMedia: ''
+      },
+    });
+    res.json({ success: true, post });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to schedule post." });
+  }
+};
 
 //comment to a post logic
 export const commentOnPost=async (req:Request, res:Response):Promise<void>=>{
@@ -264,5 +311,59 @@ export const GetAllComment = async (req: Request, res: Response): Promise<void> 
   } catch (error) {
     console.error('Error fetching comments:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch comments' });
+  }
+};
+
+export const Like = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { postId } = req.params;
+    const userId = req.userId as string;
+
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({ where: { id: postId } });
+    if (!post) {
+      res.status(404).json({ success: false, message: "Post not found" });
+      return;
+    }
+
+    // Check if user already liked the post
+    const existingLike = await prisma.like.findUnique({
+      where: {
+        postId_userId: {
+          postId,
+          userId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      // If already liked, unlike (remove like)
+      await prisma.like.delete({
+        where: {
+          postId_userId: {
+            postId,
+            userId,
+          },
+        },
+      });
+      res.status(200).json({ success: true, liked: false, message: "Post unliked" });
+    } else {
+      // If not liked, add like
+      await prisma.like.create({
+        data: {
+          postId,
+          userId,
+        },
+      });
+      res.status(201).json({ success: true, liked: true, message: "Post liked" });
+    }
+  } catch (error) {
+    console.error("Error liking/unliking post:", error);
+    res.status(500).json({ success: false, message: "Failed to like/unlike post" });
   }
 };

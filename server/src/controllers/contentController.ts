@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from "@prisma/client";
+import { createDecipheriv } from "crypto";
 const prisma = new PrismaClient();
 
 
@@ -28,12 +29,12 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
 
       // Latest
       const latestPosts = await prisma.post.findMany({
-        orderBy: { postDate: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: fetchCount,
         include: {
           user: { select: { id: true, username: true, tag: true, profileImage: true, isCritic: true } },
           category: true,
-          _count: { select: { views: true, comments: true } },
+          _count: { select: { views: true, comments: true, likes: true } },
         },
       });
 
@@ -50,19 +51,19 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
         include: {
           user: { select: { id: true, username: true, tag: true, profileImage: true, isCritic: true } },
           category: true,
-          _count: { select: { views: true, comments: true } },
+          _count: { select: { views: true, comments: true, likes: true } },
         },
       });
 
       // Critics
       const criticPosts = await prisma.post.findMany({
         where: { user: { isCritic: true } },
-        orderBy: { postDate: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: fetchCount,
         include: {
           user: { select: { id: true, username: true, tag: true, profileImage: true, isCritic: true } },
           category: true,
-          _count: { select: { views: true, comments: true } },
+          _count: { select: { views: true, comments: true, likes: true } },
         },
       });
 
@@ -105,9 +106,27 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
         }));
       }
 
+      let likedPostIds: Set<string> = new Set();
+      if (currentUserId) {
+        const likes = await prisma.like.findMany({
+          where: {
+            userId: currentUserId,
+            postId: { in: postsWithFollow.map(post => post.id) }, // or posts.map(post => post.id)
+          },
+          select: { postId: true },
+        });
+        likedPostIds = new Set(likes.map(like => like.postId));
+      }
+
+      // Add isLiked to each post
+      const postsWithLike = postsWithFollow.map(post => ({
+        ...post,
+        isLiked: currentUserId ? likedPostIds.has(post.id) : false,
+      }));
+
       res.json({
         success: true,
-        data: postsWithFollow,
+        data: postsWithLike,
         pagination: {
           page: parsedPage,
           limit: parsedLimit,
@@ -120,7 +139,7 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
       // Get only latest posts
       let posts = (await prisma.post.findMany({
         take: parsedLimit,
-        orderBy: { postDate: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           user: {
             select: {
@@ -136,6 +155,7 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
             select: {
               views: true,
               comments: true,
+              likes: true, // <-- add likes here
             },
           },
         },
@@ -192,6 +212,7 @@ export const featured = async (req: Request<any, any, any, QueryParams>, res: Re
             select: {
               views: true,
               comments: true,
+              likes: true, // <-- add likes here
             },
           },
         },
@@ -330,6 +351,7 @@ export const category = async (req: Request<any, any, any, QueryParam>, res: Res
             select: {
               views: true,
               comments: true,
+              likes: true, // <-- add likes here
             },
           },
         },
@@ -354,7 +376,7 @@ export const category = async (req: Request<any, any, any, QueryParam>, res: Res
       });
       return;
     } else {
-      orderBy = { postDate: 'desc' };
+      orderBy = { createdAt: 'desc' };
     }
 
     // Standard query with pagination
@@ -381,6 +403,7 @@ export const category = async (req: Request<any, any, any, QueryParam>, res: Res
             select: {
               views: true,
               comments: true,
+              likes: true, // <-- add likes here
             },
           },
         },

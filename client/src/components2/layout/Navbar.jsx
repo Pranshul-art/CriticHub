@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const Navbar = ({ darkMode, toggleDarkMode }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const location = useLocation();
   
   // Check scroll position to change navbar appearance
@@ -26,7 +30,24 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
   useEffect(() => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
+    setShowProfilePanel(false);
   }, [location]);
+  
+  const handleProfilePanel = async () => {
+    setShowProfilePanel(prev => !prev);
+    if (!profile && !profileLoading) {
+      setProfileLoading(true);
+      try {
+        const res = await axios.get("http://localhost:8080/api/v1/user/profile", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        setProfile(res.data.data);
+      } catch (e) {
+        // Optionally handle error
+      }
+      setProfileLoading(false);
+    }
+  }
   
   return (
     <header 
@@ -85,11 +106,28 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
           
           {/* User Profile - Desktop */}
           <div className="hidden md:block relative">
-            <button 
+            <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
               className="flex items-center justify-center h-10 w-10 rounded-full bg-coral-500 text-white font-medium text-sm hover:bg-coral-600 transition-colors"
             >
-              AC
+              {profile && profile.profileImage ? (
+                <img
+                  src={profile.profileImage}
+                  alt="Profile"
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+              ) : profile && profile.username ? (
+                <span className="font-bold text-lg">
+                  {profile.username
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </span>
+              ) : (
+                <span className="font-bold text-lg">U</span>
+              )}
             </button>
             
             {/* User Dropdown */}
@@ -101,9 +139,12 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 transition={{ duration: 0.2 }}
                 className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-navy-800 shadow-lg py-2 z-50"
               >
-                <Link to="/profile" className="block px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700">
+                <button
+                  onClick={handleProfilePanel}
+                  className="block w-full text-left px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700"
+                >
                   My Profile
-                </Link>
+                </button>
                 {/* <Link to="/settings" className="block px-4 py-2 text-navy-700 dark:text-cream hover:bg-light-cream dark:hover:bg-navy-700">
                   Settings
                 </Link> */}
@@ -111,9 +152,9 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                   Saved Critiques
                 </Link>
                 <hr className="my-2 border-gray-200 dark:border-navy-700" />
-                <button className="block w-full text-left px-4 py-2 text-coral-500 hover:bg-light-cream dark:hover:bg-navy-700">
+                {/* <button className="block w-full text-left px-4 py-2 text-coral-500 hover:bg-light-cream dark:hover:bg-navy-700">
                   Sign Out
-                </button>
+                </button> */}
               </motion.div>
             )}
           </div>
@@ -166,6 +207,54 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 </svg>
               </button>
             </nav>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Profile Panel */}
+      {showProfilePanel && (
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed top-0 left-0 right-0 z-50 flex justify-center"
+          style={{ pointerEvents: "auto" }}
+        >
+          <div className="bg-white dark:bg-navy-900 rounded-b-2xl shadow-xl border-b border-coral-500 w-full max-w-md mx-auto mt-0 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xl font-bold text-navy-900 dark:text-cream">My Profile</span>
+              <button
+                onClick={() => setShowProfilePanel(false)}
+                className="text-coral-500 hover:text-coral-700 text-2xl font-bold"
+              >
+                &times;
+              </button>
+            </div>
+            {profileLoading ? (
+              <div className="text-center text-navy-700 dark:text-cream">Loading...</div>
+            ) : profile ? (
+              <div>
+                <div className="flex items-center mb-4">
+                  <img
+                    src={profile.profileImage || "/default-avatar.png"}
+                    alt="Profile"
+                    className="w-16 h-16 rounded-full border-2 border-coral-500 mr-4"
+                  />
+                  <div>
+                    <div className="font-bold text-lg text-navy-900 dark:text-cream">{profile.username}</div>
+                    <div className="text-xs text-coral-500">@{profile.tag}</div>
+                  </div>
+                </div>
+                <div className="text-navy-700 dark:text-cream mb-2">{profile.bio}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Email: {profile.email}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Age: {profile.age}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Gender: {profile.gender}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Joined: {new Date(profile.createdAt).toLocaleDateString()}</div>
+              </div>
+            ) : (
+              <div className="text-center text-navy-700 dark:text-cream">No profile data.</div>
+            )}
           </div>
         </motion.div>
       )}

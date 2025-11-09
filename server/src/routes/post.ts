@@ -2,7 +2,7 @@ import express from "express";
 import { authMiddleware } from "../middleware/auth";
 import { category, featured, postView } from "../controllers/contentController";
 import multer from "multer";
-import { commentOnPost, createPost, GetAllComment } from "../controllers/postController";
+import { commentOnPost, createPost, GetAllComment, Like, schedulePost } from "../controllers/postController";
 import { CategoryController } from "../controllers/categoryController";
 
 const postRouter= express.Router();
@@ -33,11 +33,18 @@ postRouter.post("/create", authMiddleware, upload.single('media'), createPost);
 // views for a post and update analytics
 postRouter.post("/post/:postId/view", authMiddleware, postView);
 
+// schedule the post
+postRouter.post("/schedule", authMiddleware, schedulePost);
+
 // comment to a post
 postRouter.post("/:postId/comments", authMiddleware, commentOnPost);
 
 // get all comments
 postRouter.get("/:postId/comments", authMiddleware, GetAllComment);
+
+// like on a post
+postRouter.post("/:postId/like", authMiddleware, Like);
+
 
 
 export { postRouter };

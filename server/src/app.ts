@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 import { rootRouter } from "./routes/rootRouter";
 import morgan from "morgan";
+import "./cron/autoPublish";
 dotenv.config();
 
 const app=express();

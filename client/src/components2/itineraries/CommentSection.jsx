@@ -95,7 +95,7 @@ const CommentSection = ({ postId, authorId, onClose, open, theme }) => {
               }`}
             >
               <div className="flex items-center mb-1">
-                <span className="font-bold text-sm text-navy-900 dark:text-coral-200">
+                <span className="font-bold text-sm text-white dark:text-coral-200">
                   {comment.user?.username || "User"}
                   {comment.userId === authorId && (
                     <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-coral-500 text-white">Author</span>

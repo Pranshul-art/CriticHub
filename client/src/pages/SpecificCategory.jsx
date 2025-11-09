@@ -138,7 +138,7 @@ const SpecificCategory = () => {
                     </span>
                   </div>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(post.postDate).toLocaleDateString()}
+                    {new Date(post.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -263,7 +263,7 @@ const SpecificCategory = () => {
                 </p>
                 <p>
                   <strong>Posted on:</strong>{" "}
-                  {new Date(selectedPost.postDate).toLocaleDateString()}
+                  {new Date(selectedPost.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>

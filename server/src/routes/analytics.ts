@@ -1,6 +1,6 @@
 import  express  from "express";
 import { authMiddleware } from "../middleware/auth";
-import { ageGroup, dailyInteractions, gender, totals } from "../controllers/analysisController";
+import { ageGroup, dailyInteractions, demographics, gender, totals } from "../controllers/analysisController";
 
 const analyticsRouter= express.Router();
 
@@ -16,5 +16,7 @@ analyticsRouter.get("/totals",authMiddleware, totals);
 //each day interaction
 analyticsRouter.get("/daily-interactions", authMiddleware, dailyInteractions);
 
+// demographics
+analyticsRouter.get("/demographics", authMiddleware, demographics);
 
 export { analyticsRouter };
